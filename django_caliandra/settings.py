@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Autenticação personalizada
+AUTH_USER_MODEL = 'app.Usuario'
+
 
 # Application definition
 
