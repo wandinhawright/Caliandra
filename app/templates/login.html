@@ -1,2 +1,22 @@
 {% load crispy_forms_tags %}
-{% crispy form %}
+<div class="login-container">
+        <div class="login-header">
+            <h2>Entrar na Caliandra</h2>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="login">
+            {{ form|crispy }}
+            
+            <button type="submit" class="btn">Entrar</button>
+        </form>
+        
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <div class="register-link">
+            <p>Não tem uma conta? <a href="?action=registrar">Cadastre-se aqui</a></p>
+        </div>
+    </div>

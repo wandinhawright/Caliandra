@@ -30,6 +30,11 @@ ALLOWED_HOSTS = []
 # Autenticação personalizada
 AUTH_USER_MODEL = 'app.Usuario'
 
+# Backend de autenticação para usar email em vez de username
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 # Application definition
 

@@ -1,0 +1,22 @@
+{% load crispy_forms_tags %}
+    <div class="register-container">
+        <div class="register-header">
+            <h2>Cadastro na Caliandra</h2>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="registrar">
+            {{ form|crispy }}
+
+            <button type="submit" class="btn">Cadastrar</button>
+        </form>
+        
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <div class="login-link">
+            <p>Já tem uma conta? <a href="/login/">Faça login aqui</a></p>
+        </div>
+    </div>
