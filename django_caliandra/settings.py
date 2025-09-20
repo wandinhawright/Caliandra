@@ -129,3 +129,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django-cotton            reference:https://django-cotton.com/docs/quickstart
 # ---------------------------------------------------------------------------#
 INSTALLED_APPS += ['django_cotton',]
+
+# -----------------------------------------------------------------------------------------------------#
+# Django-crispy-forms     reference:https://django-crispy-forms.readthedocs.io/en/latest/install.html
+# -----------------------------------------------------------------------------------------------------#
+INSTALLED_APPS += ['crispy_forms','crispy_bootstrap5',]
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
