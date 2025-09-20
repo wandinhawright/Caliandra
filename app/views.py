@@ -1,7 +1,7 @@
 from urllib import request
 from django.shortcuts import redirect, render
 from django.views import View
-from django.contrib.auth import authenticate , login
+from django.contrib.auth import authenticate, login, logout
 from .models import Usuario, Produto, Pedido
 from .forms import LoginForm , RegistroForm
 # Create your views here.
@@ -72,4 +72,16 @@ class LoginView(View):
                     'form': form,
                     'error': 'Credenciais inválidas'
                 })
+
+
+class LogoutView(View):
+    def get(self, request):
+        """Faz logout do usuário e redireciona para a página de login"""
+        logout(request)
+        return redirect('inicio')
+    
+    def post(self, request):
+        """Permite logout via POST também"""
+        logout(request)
+        return redirect('inicio')
 

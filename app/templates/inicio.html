@@ -1,5 +1,13 @@
 <c-header>
 </c-header>
-<button>
-    <a href="/login/">Entrar</a>
-</button>
+{% if not user.is_authenticated %}
+    <button>
+        <a href="/login/">Entrar</a>
+    </button>
+{% endif %}
+{% if user.is_authenticated %}
+    <p>Bem-vindo, {{ user.nome }}!</p>
+    <button>
+        <a href="/logout/">Sair</a>
+    </button>
+{% endif %}
