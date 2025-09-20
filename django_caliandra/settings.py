@@ -141,3 +141,14 @@ INSTALLED_APPS += ['django_cotton',]
 INSTALLED_APPS += ['crispy_forms','crispy_bootstrap5',]
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# -----------------------------------------------------------------------------#
+# Configuração para envio de E-mail (modo de desenvolvimento)
+# -----------------------------------------------------------------------------#
+# Imprime o e-mail no console que está rodando o servidor.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'nao-responda@caliandra.com'
+
+# URL de redirecionamento após o login
+LOGIN_REDIRECT_URL = 'inicio'
+

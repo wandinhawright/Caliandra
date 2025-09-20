@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from app.views import InicioView, LoginView, LogoutView
+from app.views import InicioView, LoginView, LogoutView , VerifyCodeView
 
 
 urlpatterns = [
@@ -25,4 +25,5 @@ urlpatterns = [
     path('', InicioView.as_view(), name='inicio'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('verifica-codigo/', VerifyCodeView.as_view(), name='verifica_codigo'),
 ]
