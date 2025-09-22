@@ -1,0 +1,45 @@
+<c-header>
+</c-header>
+{% load static %}
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Catálogo - Caliandra</title>
+    <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}">
+    </head>
+
+<body style="background: #fffedf;">
+    <div class="container py-4 py-xl-5">
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h2>Nosso Catálogo</h2>
+                <p>Adicione produtos ao seu pedido.</p>
+            </div>
+        </div>
+        <div class="row gy-4 row-cols-1 row-cols-md-2 row-cols-xl-3">
+            {% for produto in produtos %}
+            <div class="col">
+                <div class="card">
+                    <img class="card-img-top w-100 d-block fit-cover" src="{{ produto.imagem.url }}">
+                    <div class="card-body p-4">
+                        <h4 class="card-title">{{ produto.nome }}</h4>
+                        <h5>R$ {{ produto.valor }}</h5>
+                        <form action="{% url 'adicionar_ao_pedido' produto.id %}" method="post">
+                            {% csrf_token %}
+                            <button class="btn btn-primary" type="submit">Adicionar ao Pedido</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+         <div class="text-center mt-4">
+            <a href="{% url 'ver_pedido' %}" class="btn btn-success btn-lg">Ver Pedido</a>
+        </div>
+    </div>
+    <script src="{% static 'app/js/bootstrap.min.js' %}"></script>
+</body>
+</html>

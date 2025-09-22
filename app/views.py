@@ -7,6 +7,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import Usuario, Produto, Pedido
 from .forms import LoginForm, RegistroForm, VerificationCodeForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Sum
 import random
 # Create your views here.
 class InicioView(View):
@@ -154,4 +156,59 @@ class LogoutView(View):
         """Permite logout via POST também"""
         logout(request)
         return redirect('inicio')
+    
+class CatalogoView(View):
+    def get(self, request):
+        produtos = Produto.objects.all()
+        return render(request, 'catalogo.html', {'produtos': produtos})
+
+class AdicionarAoPedidoView(LoginRequiredMixin, View):
+    login_url = '/login/' # Redireciona se não estiver logado
+    
+    def post(self, request, produto_id):
+        produto = Produto.objects.get(id=produto_id)
+        
+        # Pega ou cria um pedido "PENDENTE" para o usuário
+        pedido, criado = Pedido.objects.get_or_create(
+            usuario=request.user,
+            situacao='PENDENTE'
+        )
+        
+        # Adiciona o produto ao pedido
+        pedido.produtos.add(produto)
+        
+        # Atualiza o total do pedido
+        # Este é um jeito simples, para cenários mais complexos,
+        # você pode querer usar um campo 'quantidade'
+        total = pedido.produtos.aggregate(Sum('valor'))['valor__sum']
+        pedido.total = total if total else 0
+        pedido.save()
+
+        return redirect('catalogo')
+
+class VerPedidoView(LoginRequiredMixin, View):
+    login_url = '/login/'
+
+    def get(self, request):
+        try:
+            pedido = Pedido.objects.get(usuario=request.user, situacao='PENDENTE')
+        except Pedido.DoesNotExist:
+            pedido = None
+            
+        return render(request, 'ver_pedido.html', {'pedido': pedido})
+
+class FinalizarPedidoView(LoginRequiredMixin, View):
+    login_url = '/login/'
+    
+    def post(self, request):
+        try:
+            pedido = Pedido.objects.get(usuario=request.user, situacao='PENDENTE')
+            # Muda a situação para "FEITO" (ou o próximo passo do seu fluxo)
+            pedido.situacao = 'FEITO'
+            pedido.save()
+            # Aqui você pode adicionar lógica de pagamento, etc.
+        except Pedido.DoesNotExist:
+            # Lidar com o caso de não haver pedido pendente
+            pass
+        return redirect('inicio') # Redireciona para a página inicial após finalizar
 

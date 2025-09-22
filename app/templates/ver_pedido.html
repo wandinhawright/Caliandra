@@ -1,0 +1,42 @@
+<c-header>
+</c-header>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seu Pedido - Caliandra</title>
+    <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}">
+</head>
+<body style="background: #fffedf;">
+    <div class="container mt-5">
+        <h2>Seu Pedido</h2>
+        {% if pedido and pedido.produtos.all %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in pedido.produtos.all %}
+                    <tr>
+                        <td>{{ produto.nome }}</td>
+                        <td>R$ {{ produto.valor }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <h3 class="text-end">Total: R$ {{ pedido.total }}</h3>
+            <form action="{% url 'finalizar_pedido' %}" method="post" class="text-end">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Finalizar Pedido</button>
+            </form>
+        {% else %}
+            <p>Seu pedido está vazio.</p>
+            <a href="{% url 'catalogo' %}" class="btn btn-primary">Voltar ao Catálogo</a>
+        {% endif %}
+    </div>
+</body>
+</html>

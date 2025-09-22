@@ -48,7 +48,7 @@ class Pedido(models.Model):
         on_delete=models.CASCADE,
         related_name="pedidos"
     )
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     situacao = models.CharField(default='PENDENTE',choices=[
         ('PENDENTE', 'Pendente'),
         ('FEITO', 'Feito'),
