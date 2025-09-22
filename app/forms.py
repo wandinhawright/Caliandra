@@ -15,6 +15,7 @@ class RegistroForm(forms.Form):
     nome = forms.CharField(
         max_length=150,
         required=True,
+        label="Nome completo"
     )
     password = forms.CharField(
         label="Senha",
