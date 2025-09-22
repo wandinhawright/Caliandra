@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Usuario, Produto, Pedido
+from .models import ItemPedido, Usuario, Produto, Pedido
 from .forms import LoginForm, RegistroForm, VerificationCodeForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum
@@ -163,52 +163,65 @@ class CatalogoView(View):
         return render(request, 'catalogo.html', {'produtos': produtos})
 
 class AdicionarAoPedidoView(LoginRequiredMixin, View):
-    login_url = '/login/' # Redireciona se não estiver logado
+    login_url = '/login/'
     
     def post(self, request, produto_id):
         produto = Produto.objects.get(id=produto_id)
         
-        # Pega ou cria um pedido "PENDENTE" para o usuário
+        # Pega ou cria um carrinho para o usuário
         pedido, criado = Pedido.objects.get_or_create(
             usuario=request.user,
-            situacao='PENDENTE'
+            situacao='CARRINHO'
         )
         
-        # Adiciona o produto ao pedido
-        pedido.produtos.add(produto)
+        # Pega ou cria o item no pedido e incrementa a quantidade
+        item_pedido, item_criado = ItemPedido.objects.get_or_create(
+            pedido=pedido,
+            produto=produto
+        )
         
-        # Atualiza o total do pedido
-        # Este é um jeito simples, para cenários mais complexos,
-        # você pode querer usar um campo 'quantidade'
-        total = pedido.produtos.aggregate(Sum('valor'))['valor__sum']
-        pedido.total = total if total else 0
-        pedido.save()
+        if not item_criado:
+            item_pedido.quantidade += 1
+            item_pedido.save()
 
         return redirect('catalogo')
+
 
 class VerPedidoView(LoginRequiredMixin, View):
     login_url = '/login/'
 
     def get(self, request):
         try:
-            pedido = Pedido.objects.get(usuario=request.user, situacao='PENDENTE')
+            # Busca pelo carrinho do usuário
+            pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
+            # Pega todos os itens associados a esse carrinho
+            itens = ItemPedido.objects.filter(pedido=pedido)
+            
+            # Calcula o total
+            total = 0
+            for item in itens:
+                total += item.get_total_item_price()
+            pedido.total = total
+            pedido.save()
+
         except Pedido.DoesNotExist:
+            itens = None
             pedido = None
             
-        return render(request, 'ver_pedido.html', {'pedido': pedido})
+        return render(request, 'ver_pedido.html', {'pedido': pedido, 'itens': itens})
 
 class FinalizarPedidoView(LoginRequiredMixin, View):
     login_url = '/login/'
     
     def post(self, request):
         try:
-            pedido = Pedido.objects.get(usuario=request.user, situacao='PENDENTE')
-            # Muda a situação para "FEITO" (ou o próximo passo do seu fluxo)
+            pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
+            # Muda a situação para "FEITO", transformando o carrinho em um pedido real
             pedido.situacao = 'FEITO'
             pedido.save()
-            # Aqui você pode adicionar lógica de pagamento, etc.
+            # Aqui você pode adicionar lógica de pagamento, notificação, etc.
+            messages.success(request, 'Seu pedido foi finalizado com sucesso!')
         except Pedido.DoesNotExist:
-            # Lidar com o caso de não haver pedido pendente
-            pass
-        return redirect('inicio') # Redireciona para a página inicial após finalizar
-
+            messages.error(request, 'Você não tem um carrinho ativo para finalizar.')
+            
+        return redirect('inicio')

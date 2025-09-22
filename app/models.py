@@ -40,17 +40,29 @@ class Produto(models.Model):
     marca = models.CharField(max_length=100)
     tipo = models.CharField(max_length=100)
 
+class ItemPedido(models.Model):
+    pedido = models.ForeignKey('Pedido', on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    quantidade = models.PositiveIntegerField(default=1)
+
+    def get_total_item_price(self):
+        return self.quantidade * self.produto.valor
+
 class Pedido(models.Model):
-    produtos = models.ManyToManyField(Produto)
+    produtos = models.ManyToManyField(Produto, through=ItemPedido, related_name='pedidos_item')
     data = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(
-        Usuario,  # ou User se estiver usando o padrão
+        Usuario,
         on_delete=models.CASCADE,
         related_name="pedidos"
     )
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    situacao = models.CharField(default='PENDENTE',choices=[
-        ('PENDENTE', 'Pendente'),
-        ('FEITO', 'Feito'),
-        ('FINALIZADO', 'Finalizado')
-    ])
+    # NOVO CAMPO para diferenciar carrinho de pedido
+    situacao = models.CharField(
+        default='CARRINHO',
+        choices=[
+            ('CARRINHO', 'Carrinho'), # Carrinho ativo, não visível para admin
+            ('FEITO', 'Feito'),       # Pedido finalizado, visível para admin
+            ('FINALIZADO', 'Finalizado') # Pedido entregue/concluído
+        ]
+    )
