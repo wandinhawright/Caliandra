@@ -28,10 +28,12 @@ class RegistroForm(forms.Form):
     )
     email = forms.EmailField(
         required=True,
+        widget=forms.EmailInput(attrs={'placeholder': 'exemplo@dominio.com'})
     )
     telefone = forms.CharField(
         max_length=15,
         required=True,
+        widget=forms.TextInput(attrs={'placeholder': '(99) 99999-9999'})
     )
     endereco = forms.CharField(
         label="Endereço",
