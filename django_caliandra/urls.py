@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 
 from app.views import InicioView, LoginView, LogoutView , VerifyCodeView
 
@@ -27,3 +29,8 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('verifica-codigo/', VerifyCodeView.as_view(), name='verifica_codigo'),
 ]
+
+# Servir arquivos estáticos em desenvolvimento
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
