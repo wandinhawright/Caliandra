@@ -224,4 +224,9 @@ class FinalizarPedidoView(LoginRequiredMixin, View):
         except Pedido.DoesNotExist:
             messages.error(request, 'Você não tem um carrinho ativo para finalizar.')
             
-        return redirect('inicio')
+        return redirect('finalizacao')
+class FinalizacaoView(LoginRequiredMixin, View):
+    login_url = '/login/'
+
+    def get(self, request):
+        return render(request, 'finalizacao.html')

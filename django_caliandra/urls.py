@@ -19,7 +19,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from app.views import InicioView, LoginView, LogoutView , VerifyCodeView , CatalogoView, AdicionarAoPedidoView, VerPedidoView, FinalizarPedidoView
+from app.views import FinalizacaoView, InicioView, LoginView, LogoutView , VerifyCodeView , CatalogoView, AdicionarAoPedidoView, VerPedidoView, FinalizarPedidoView
 
 
 urlpatterns = [
@@ -32,6 +32,7 @@ urlpatterns = [
     path('adicionar-ao-pedido/<int:produto_id>/', AdicionarAoPedidoView.as_view(), name='adicionar_ao_pedido'),
     path('ver-pedido/', VerPedidoView.as_view(), name='ver_pedido'),
     path('finalizar-pedido/', FinalizarPedidoView.as_view(), name='finalizar_pedido'),
+    path('finalizacao/', FinalizacaoView.as_view(), name='finalizacao'),
 ]
 
 # Servir arquivos estáticos em desenvolvimento

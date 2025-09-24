@@ -39,7 +39,7 @@
                             </svg></div>
                         <form class="text-center" method="post">
                             {% csrf_token %}
-                            {{ form|crispy }}
+                            <input type="hidden" name="action" value="registrar">  {{ form|crispy }}
                             <div class="mb-3"><button class="btn btn-primary bg-success w-100 d-block" type="submit"><a style="font-size: 22px;font-family: Alexandria, sans-serif;">Entrar</a></button></div>
                         </form>
                     </div>
