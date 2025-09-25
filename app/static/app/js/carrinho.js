@@ -22,13 +22,19 @@ class CarrinhoManager {
     bindEvents() {
         // Quantity controls
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('quantity-btn-plus')) {
-                this.handleQuantityChange(e.target, 'plus');
-            } else if (e.target.classList.contains('quantity-btn-minus')) {
-                this.handleQuantityChange(e.target, 'minus');
-            } else if (e.target.classList.contains('remove-btn')) {
-                this.handleRemoveItem(e.target);
-            } else if (e.target.classList.contains('btn-clear-cart')) {
+            // Use closest to ensure clicks on icons inside buttons are handled
+            const plusBtn = e.target.closest('.quantity-btn-plus');
+            const minusBtn = e.target.closest('.quantity-btn-minus');
+            const removeBtn = e.target.closest('.remove-btn');
+            const clearCartBtn = e.target.closest('.btn-clear-cart');
+
+            if (plusBtn) {
+                this.handleQuantityChange(plusBtn, 'plus');
+            } else if (minusBtn) {
+                this.handleQuantityChange(minusBtn, 'minus');
+            } else if (removeBtn) {
+                this.handleRemoveItem(removeBtn);
+            } else if (clearCartBtn) {
                 this.handleClearCart();
             }
         });
