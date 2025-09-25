@@ -182,3 +182,11 @@ media/
 # Migrations (opcional - dependendo da sua estratégia)
 # */migrations/*.py
 # !*/migrations/__init__.py
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+db.sqlite3
+media/
+*.log
+.env
