@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import ItemPedido, Usuario, Produto, Pedido
-from .forms import LoginForm, RegistroForm, VerificationCodeForm
+from .forms import LoginForm, RegistroForm, VerificationCodeForm, CheckoutForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum
 import random
@@ -207,26 +207,92 @@ class VerPedidoView(LoginRequiredMixin, View):
         except Pedido.DoesNotExist:
             itens = None
             pedido = None
-            
-        return render(request, 'ver_pedido.html', {'pedido': pedido, 'itens': itens})
+        
+        # Criar o formulário de checkout
+        form = CheckoutForm()
+        
+        return render(request, 'ver_pedido.html', {
+            'pedido': pedido, 
+            'itens': itens,
+            'form': form
+        })
 
 class FinalizarPedidoView(LoginRequiredMixin, View):
     login_url = '/login/'
     
     def post(self, request):
-        try:
-            pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
-            # Muda a situação para "FEITO", transformando o carrinho em um pedido real
-            pedido.situacao = 'FEITO'
-            pedido.save()
-            # Aqui você pode adicionar lógica de pagamento, notificação, etc.
-            messages.success(request, 'Seu pedido foi finalizado com sucesso!')
-        except Pedido.DoesNotExist:
-            messages.error(request, 'Você não tem um carrinho ativo para finalizar.')
+        form = CheckoutForm(request.POST)
+        
+        if form.is_valid():
+            try:
+                pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
+                
+                # Salvar informações de entrega
+                pedido.endereco_entrega = form.cleaned_data['endereco_entrega']
+                pedido.cidade = form.cleaned_data['cidade']
+                pedido.cep = form.cleaned_data['cep']
+                pedido.observacoes = form.cleaned_data['observacoes']
+                
+                # Muda a situação para "FEITO", transformando o carrinho em um pedido real
+                pedido.situacao = 'FEITO'
+                pedido.save()
+                
+                # Aqui você pode adicionar lógica de pagamento, notificação, etc.
+                messages.success(request, f'Seu pedido #{pedido.numero_pedido} foi finalizado com sucesso!')
+                
+                # Enviar email de confirmação (opcional)
+                try:
+                    send_mail(
+                        f'Pedido #{pedido.numero_pedido} - Compra Coletiva Caliandra',
+                        f'Olá {pedido.usuario.nome}!\n\nSeu pedido #{pedido.numero_pedido} foi recebido com sucesso.\n\nTotal: R$ {pedido.total}\n\nAcompanhe o status do seu pedido através do nosso WhatsApp.\n\nObrigado por participar da nossa compra coletiva!',
+                        settings.DEFAULT_FROM_EMAIL,
+                        [pedido.usuario.email],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    # Log do erro, mas não interrompe o processo
+                    pass
+                
+                return redirect('finalizacao')
+                
+            except Pedido.DoesNotExist:
+                messages.error(request, 'Você não tem um carrinho ativo para finalizar.')
+                return redirect('ver_pedido')
+        else:
+            # Se o formulário não é válido, retorna para a página com os erros
+            try:
+                pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
+                itens = ItemPedido.objects.filter(pedido=pedido)
+            except Pedido.DoesNotExist:
+                pedido = None
+                itens = None
             
-        return redirect('finalizacao')
+            return render(request, 'ver_pedido.html', {
+                'pedido': pedido, 
+                'itens': itens,
+                'form': form
+            })
 class FinalizacaoView(LoginRequiredMixin, View):
     login_url = '/login/'
 
     def get(self, request):
-        return render(request, 'finalizacao.html')
+        # Busca pelo último pedido finalizado do usuário
+        try:
+            pedido = Pedido.objects.filter(
+                usuario=request.user, 
+                situacao='FEITO'
+            ).order_by('-data').first()
+            
+            if pedido:
+                itens = ItemPedido.objects.filter(pedido=pedido)
+                return render(request, 'finalizacao.html', {
+                    'pedido': pedido,
+                    'itens': itens
+                })
+            else:
+                messages.warning(request, 'Nenhum pedido encontrado.')
+                return redirect('catalogo')
+                
+        except Exception as e:
+            messages.error(request, 'Erro ao carregar informações do pedido.')
+            return redirect('catalogo')
