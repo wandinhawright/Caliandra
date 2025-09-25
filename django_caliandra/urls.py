@@ -19,7 +19,11 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from app.views import FinalizacaoView, InicioView, LoginView, LogoutView , VerifyCodeView , CatalogoView, AdicionarAoPedidoView, VerPedidoView, FinalizarPedidoView
+from app.views import (
+    FinalizacaoView, InicioView, LoginView, LogoutView, VerifyCodeView, 
+    CatalogoView, AdicionarAoPedidoView, VerPedidoView, FinalizarPedidoView,
+    AtualizarQuantidadeView, RemoverItemView, EsvaziarCarrinhoView
+)
 
 
 urlpatterns = [
@@ -33,6 +37,10 @@ urlpatterns = [
     path('ver-pedido/', VerPedidoView.as_view(), name='ver_pedido'),
     path('finalizar-pedido/', FinalizarPedidoView.as_view(), name='finalizar_pedido'),
     path('finalizacao/', FinalizacaoView.as_view(), name='finalizacao'),
+    # AJAX endpoints for cart management
+    path('ajax/atualizar-quantidade/', AtualizarQuantidadeView.as_view(), name='atualizar_quantidade'),
+    path('ajax/remover-item/', RemoverItemView.as_view(), name='remover_item'),
+    path('ajax/esvaziar-carrinho/', EsvaziarCarrinhoView.as_view(), name='esvaziar_carrinho'),
 ]
 
 # Servir arquivos estáticos em desenvolvimento
