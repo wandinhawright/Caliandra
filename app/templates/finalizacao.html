@@ -1,1 +1,217 @@
-finalizado com sucesso
+<c-header>
+</c-header>
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Pedido Confirmado - Caliandra</title>
+    <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aguafina+Script&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aldrich&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alexandria&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Amethysta&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Bad+Script&amp;display=swap">
+    <link rel="stylesheet" href="{% static 'app/fonts/fontawesome-all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/bss-overrides.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/Hero-Travel-.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/Navbar-Centered-Links-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/text-box.css' %}">
+</head>
+
+<body style="background: #fffedf;">
+    <div class="container mt-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if pedido %}
+            <!-- Confirmação de sucesso -->
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card shadow">
+                        <div class="card-body text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                            </div>
+                            <h1 class="text-success mb-3">Pedido Confirmado!</h1>
+                            <p class="lead mb-4">
+                                Seu pedido foi recebido com sucesso e está sendo processado.
+                            </p>
+                            
+                            <div class="row justify-content-center mb-4">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <i class="fas fa-receipt me-2"></i>Número do Pedido
+                                            </h5>
+                                            <h3 class="text-primary mb-0">{{ pedido.numero_pedido }}</h3>
+                                            <small class="text-muted">Guarde este número para acompanhamento</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalhes do pedido -->
+            <div class="row mt-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Detalhes do Pedido</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th class="text-center">Quantidade</th>
+                                            <th class="text-end">Valor Unitário</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in itens %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.produto.nome }}</strong>
+                                                <br><small class="text-muted">{{ item.produto.marca }}</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.quantidade }}</span>
+                                            </td>
+                                            <td class="text-end">R$ {{ item.produto.valor }}</td>
+                                            <td class="text-end">
+                                                <strong>R$ {{ item.get_total_item_price }}</strong>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Total do Pedido:</strong></td>
+                                            <td class="text-end">
+                                                <h4 class="text-success mb-0">R$ {{ pedido.total }}</h4>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!-- Informações de entrega -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-truck me-2"></i>Informações de Entrega</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2">
+                                <strong>Cliente:</strong><br>
+                                {{ pedido.usuario.nome }}<br>
+                                <small>{{ pedido.usuario.email }}</small><br>
+                                <small>{{ pedido.usuario.telefone }}</small>
+                            </p>
+                            
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Endereço:</strong><br>
+                                {{ pedido.usuario.endereco }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Próximos passos -->
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Próximos Passos</h6>
+                        </div>
+                        <div class="card-body">
+                            <ol class="list-unstyled">
+                                <li class="mb-3">
+                                    <i class="fas fa-envelope text-primary me-2"></i>
+                                    <strong>Confirmação por E-mail</strong><br>
+                                    <small class="text-muted">Você receberá um e-mail de confirmação em breve.</small>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-users text-success me-2"></i>
+                                    <strong>Formação do Grupo</strong><br>
+                                    <small class="text-muted">Aguardaremos mais participantes para fechar a compra coletiva.</small>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-shopping-cart text-warning me-2"></i>
+                                    <strong>Compra dos Produtos</strong><br>
+                                    <small class="text-muted">Faremos a compra diretamente com os fornecedores.</small>
+                                </li>
+                                <li class="mb-0">
+                                    <i class="fas fa-truck text-info me-2"></i>
+                                    <strong>Entrega</strong><br>
+                                    <small class="text-muted">Você será notificado quando os produtos estiverem prontos para retirada.</small>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações de contato -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">
+                                <i class="fas fa-headset me-2"></i>Precisa de Ajuda?
+                            </h5>
+                            <p class="card-text">
+                                Entre em contato conosco pelo WhatsApp para acompanhar seu pedido ou esclarecer dúvidas.
+                            </p>
+                            <div class="btn-group" role="group">
+                                <a href="#" class="btn btn-success">
+                                    <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                                </a>
+                                <a href="{% url 'catalogo' %}" class="btn btn-primary">
+                                    <i class="fas fa-store me-2"></i>Continuar Comprando
+                                </a>
+                                <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-home me-2"></i>Página Inicial
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Caso não haja pedido -->
+            <div class="text-center py-5">
+                <div class="card mx-auto" style="max-width: 400px;">
+                    <div class="card-body">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h4>Nenhum pedido encontrado</h4>
+                        <p class="text-muted">Não foi possível encontrar informações do seu pedido.</p>
+                        <a href="{% url 'catalogo' %}" class="btn btn-primary">
+                            <i class="fas fa-store me-2"></i>Ver Catálogo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="{% static 'app/js/bootstrap.min.js' %}"></script>
+</body>
+</html>

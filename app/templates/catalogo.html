@@ -36,8 +36,8 @@
                     {% if produto.imagem %}
                         <img class="card-img-top w-100 d-block fit-cover" src="{{ produto.imagem.url }}">
                     {% else %}
-                        <div class="card-img-top w-100 d-block fit-cover d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
-                            <i class="fas fa-leaf text-muted" style="font-size: 3rem;"></i>
+                        <div class="card-img-top w-100 d-block bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">Sem imagem</span>
                         </div>
                     {% endif %}
                     <div class="card-body p-4">

@@ -1,13 +1,14 @@
 <c-header>
 </c-header>
 {% load static %}
+{% load crispy_forms_tags %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Meu Carrinho - Caliandra</title>
+    <title>Finalizar Pedido - Caliandra</title>
     <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aguafina+Script&amp;display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aldrich&amp;display=swap">
@@ -19,140 +20,38 @@
     <link rel="stylesheet" href="{% static 'app/css/Hero-Travel-.css' %}">
     <link rel="stylesheet" href="{% static 'app/css/Navbar-Centered-Links-icons.css' %}">
     <link rel="stylesheet" href="{% static 'app/css/text-box.css' %}">
-    <link rel="stylesheet" href="{% static 'app/css/carrinho.css' %}">
-</head>
-
-<body class="cart-container">
-    <div class="container">
+<body style="background: #fffedf;">
+    <div class="container mt-5">
+        <h2>Seu Pedido</h2>
         {% if pedido and itens %}
-            <!-- Cart Header -->
-            <div class="cart-header">
-                <h2>
-                    <i class="fas fa-shopping-cart cart-icon"></i>
-                    Meu Carrinho
-                    <small class="ms-3" style="font-size: 1rem; opacity: 0.9;">
-                        {{ itens|length }} 
-                        {% if itens|length == 1 %}item{% else %}itens{% endif %}
-                    </small>
-                </h2>
-            </div>
-
-            <!-- Cart Body -->
-            <div class="cart-body">
-                {% for item in itens %}
-                <div class="cart-item" data-item-id="{{ item.id }}">
-                    <div class="row align-items-center">
-                        <!-- Product Image -->
-                        <div class="col-md-2 col-3">
-                            {% if item.produto.imagem %}
-                                <img src="{{ item.produto.imagem.url }}" alt="{{ item.produto.nome }}" class="product-image">
-                            {% else %}
-                                <div class="product-image d-flex align-items-center justify-content-center bg-light">
-                                    <i class="fas fa-leaf text-muted" style="font-size: 2rem;"></i>
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Product Info -->
-                        <div class="col-md-4 col-9">
-                            <div class="product-info">
-                                <h5 class="product-name">{{ item.produto.nome }}</h5>
-                                <p class="product-price">R$ {{ item.produto.valor|floatformat:2 }}</p>
-                                {% if item.produto.marca %}
-                                    <small class="text-muted">{{ item.produto.marca }}</small>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Quantity Controls -->
-                        <div class="col-md-3 col-6 mt-3 mt-md-0">
-                            <div class="quantity-controls">
-                                <button type="button" class="quantity-btn quantity-btn-minus" 
-                                        {% if item.quantidade <= 1 %}disabled{% endif %}>
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                                <input type="number" 
-                                       class="quantity-input" 
-                                       value="{{ item.quantidade }}" 
-                                       min="1" 
-                                       max="99">
-                                <button type="button" class="quantity-btn quantity-btn-plus">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Item Total & Remove -->
-                        <div class="col-md-2 col-4 mt-3 mt-md-0 text-end">
-                            <div class="d-flex flex-column align-items-end gap-2">
-                                <strong class="item-total">R$ {{ item.get_total_item_price|floatformat:2 }}</strong>
-                                <button type="button" class="remove-btn" title="Remover item">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <!-- Cart Summary -->
-            <div class="cart-summary">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h4 style="font-family: 'Alexandria', sans-serif; color: #333;">Resumo do Pedido</h4>
-                        <div class="d-flex justify-content-between py-2">
-                            <span>Subtotal ({{ itens|length }} 
-                                {% if itens|length == 1 %}item{% else %}itens{% endif %}):
-                            </span>
-                            <span class="cart-total">R$ {{ pedido.total|floatformat:2 }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between py-2">
-                            <span>Frete:</span>
-                            <span class="text-success">Grátis</span>
-                        </div>
-                        <hr>
-                        <div class="d-flex justify-content-between total-row">
-                            <span>Total:</span>
-                            <span class="cart-total">R$ {{ pedido.total|floatformat:2 }}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="cart-actions">
-                            <button type="button" class="btn btn-clear-cart">
-                                <i class="fas fa-trash me-2"></i>Esvaziar Carrinho
-                            </button>
-                            <form action="{% url 'finalizar_pedido' %}" method="post" style="flex: 1;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-finalize w-100">
-                                    <i class="fas fa-check me-2"></i>Finalizar Pedido
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço Unitário</th>
+                        <th>Preço Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                    <tr>
+                        <td>{{ item.produto.nome }}</td>
+                        <td>{{ item.quantidade }}</td>
+                        <td>R$ {{ item.produto.valor }}</td>
+                        <td>R$ {{ item.get_total_item_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <h3 class="text-end">Total do Pedido: R$ {{ pedido.total }}</h3>
+            <form action="{% url 'finalizar_pedido' %}" method="post" class="text-end">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Finalizar Pedido</button>
+            </form>
         {% else %}
-            <!-- Empty Cart -->
-            <div class="cart-header">
-                <h2>
-                    <i class="fas fa-shopping-cart cart-icon"></i>
-                    Meu Carrinho
-                </h2>
-            </div>
-            <div class="cart-body">
-                <div class="empty-cart">
-                    <div class="empty-cart-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <h3>Seu carrinho está vazio</h3>
-                    <p>Que tal adicionar alguns de nossos produtos naturais ao seu carrinho?</p>
-                    <a href="{% url 'catalogo' %}" class="btn btn-primary btn-lg mt-3">
-                        <i class="fas fa-leaf me-2"></i>Explorar Produtos
-                    </a>
-                </div>
-            </div>
+            <p>Seu pedido está vazio.</p>
+            <a href="{% url 'catalogo' %}" class="btn btn-primary">Voltar ao Catálogo</a>
         {% endif %}
 
         <!-- Continue Shopping Link -->
@@ -162,9 +61,5 @@
             </a>
         </div>
     </div>
-
-    <!-- Scripts -->
-    <script src="{% static 'app/js/bootstrap.min.js' %}"></script>
-    <script src="{% static 'app/js/carrinho.js' %}"></script>
 </body>
 </html>

@@ -57,8 +57,16 @@ class Pedido(models.Model):
         related_name="pedidos"
     )
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    # Informações de entrega
+    endereco_entrega = models.CharField(max_length=255, blank=True, null=True)
+    cidade = models.CharField(max_length=100, blank=True, null=True)
+    cep = models.CharField(max_length=9, blank=True, null=True)
+    observacoes = models.TextField(blank=True, null=True)
+    
     # NOVO CAMPO para diferenciar carrinho de pedido
     situacao = models.CharField(
+        max_length=20,
         default='CARRINHO',
         choices=[
             ('CARRINHO', 'Carrinho'), # Carrinho ativo, não visível para admin
@@ -66,3 +74,14 @@ class Pedido(models.Model):
             ('FINALIZADO', 'Finalizado') # Pedido entregue/concluído
         ]
     )
+    
+    # Número do pedido para tracking
+    numero_pedido = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    
+    def save(self, *args, **kwargs):
+        # Gerar número do pedido quando finalizado
+        if self.situacao == 'FEITO' and not self.numero_pedido:
+            import random
+            import string
+            self.numero_pedido = f"CAL{self.id or random.randint(1000, 9999)}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=4))}"
+        super().save(*args, **kwargs)

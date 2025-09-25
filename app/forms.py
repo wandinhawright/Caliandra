@@ -48,3 +48,7 @@ class VerificationCodeForm(forms.Form):
         required=True,
         widget=forms.TextInput(attrs={'placeholder': '_ _ _ _ _ _'})
     )
+
+class CheckoutForm(forms.Form):
+    # Simplified checkout form - no delivery fields needed as user's address will be used
+    pass
