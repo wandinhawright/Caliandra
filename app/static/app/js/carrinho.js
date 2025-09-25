@@ -13,6 +13,11 @@ class CarrinhoManager {
 
     init() {
         this.bindEvents();
+    // Recalculate totals locally when user interacts (mirrors inline script from template)
+    // Keeps the UI responsive while AJAX requests are processed.
+    this.recalcTotalFromDOM();
+    // Ensure minus buttons are correctly enabled/disabled on load
+    this.updateAllDecreaseButtons();
     }
 
     getCsrfToken() {
@@ -42,9 +47,45 @@ class CarrinhoManager {
         // Quantity input direct change
         document.addEventListener('input', (e) => {
             if (e.target.classList.contains('quantity-input')) {
+                const itemRow = e.target.closest('.cart-item');
+                // Reflect decrease button state immediately while typing
+                this.updateDecreaseButtonState(itemRow);
                 this.handleQuantityInput(e.target);
             }
         });
+
+        // Local total recalculation: keep cart total synchronized immediately on UI interactions
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.quantity-btn') || e.target.closest('.remove-btn')) {
+                // wait a tick for DOM updates (animations/handlers) then recalc
+                setTimeout(() => this.recalcTotalFromDOM(), 100);
+            }
+        });
+
+        document.addEventListener('change', (e) => {
+            if (e.target.classList && e.target.classList.contains('quantity-input')) {
+                setTimeout(() => this.recalcTotalFromDOM(), 100);
+            }
+        });
+    }
+
+    // Recalculate cart total by summing visible .item-total elements (mirrors template logic)
+    recalcTotalFromDOM() {
+        let total = 0;
+        document.querySelectorAll('.cart-item').forEach(function (item) {
+            const el = item.querySelector('.item-total');
+            if (!el) return;
+            // Normalize Brazilian currency: remove 'R$', remove thousands separators '.', replace decimal comma with dot
+            let text = el.textContent.replace('R$', '').trim();
+            text = text.replace(/\./g, '').replace(/,/g, '.');
+            const price = parseFloat(text);
+            if (!isNaN(price)) total += price;
+        });
+
+        const totalEl = document.getElementById('cart-total') || document.querySelector('.cart-total');
+        if (totalEl) {
+            totalEl.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+        }
     }
 
     handleQuantityChange(button, action) {
@@ -62,6 +103,8 @@ class CarrinhoManager {
         }
 
         input.value = currentQuantity;
+    // Update minus button state immediately so UI reflects allowed actions
+    this.updateDecreaseButtonState(itemRow);
         this.updateQuantity(itemId, currentQuantity, itemRow);
     }
 
@@ -77,6 +120,9 @@ class CarrinhoManager {
                 quantity = 1;
                 input.value = quantity;
             }
+
+            // Reflect the change in the minus button immediately
+            this.updateDecreaseButtonState(itemRow);
 
             this.updateQuantity(itemId, quantity, itemRow);
         }, 500); // 500ms debounce
@@ -104,6 +150,9 @@ class CarrinhoManager {
                 // Update item total
                 const itemTotal = itemRow.querySelector('.item-total');
                 itemTotal.textContent = this.formatCurrency(data.item_total);
+
+                // Ensure decrease button state matches the new quantity
+                this.updateDecreaseButtonState(itemRow);
 
                 // Update cart total
                 this.updateCartTotal(data.pedido_total);
@@ -162,6 +211,9 @@ class CarrinhoManager {
                     itemRow.remove();
                     this.updateCartTotal(data.pedido_total);
 
+                    // Update decrease buttons for any remaining items
+                    this.updateAllDecreaseButtons();
+
                     // Check if cart is empty
                     if (data.items_count === 0) {
                         this.showEmptyCart();
@@ -218,6 +270,28 @@ class CarrinhoManager {
         if (totalElement) {
             totalElement.textContent = this.formatCurrency(total);
         }
+    }
+
+    // Enable/disable the minus button for a given item row based on quantity
+    updateDecreaseButtonState(itemRow) {
+        if (!itemRow) return;
+        const input = itemRow.querySelector('.quantity-input');
+        const minusBtn = itemRow.querySelector('.quantity-btn-minus');
+        if (!input || !minusBtn) return;
+
+        const qty = parseInt(input.value) || 1;
+        if (qty <= 1) {
+            minusBtn.setAttribute('disabled', '');
+        } else {
+            minusBtn.removeAttribute('disabled');
+        }
+    }
+
+    // Update decrease buttons for all items on the page
+    updateAllDecreaseButtons() {
+        document.querySelectorAll('.cart-item').forEach((itemRow) => {
+            this.updateDecreaseButtonState(itemRow);
+        });
     }
 
     showEmptyCart() {
