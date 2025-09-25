@@ -33,7 +33,13 @@
             {% for produto in produtos %}
             <div class="col">
                 <div class="card">
-                    <img class="card-img-top w-100 d-block fit-cover" src="{{ produto.imagem.url }}">
+                    {% if produto.imagem %}
+                        <img class="card-img-top w-100 d-block fit-cover" src="{{ produto.imagem.url }}">
+                    {% else %}
+                        <div class="card-img-top w-100 d-block bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">Sem imagem</span>
+                        </div>
+                    {% endif %}
                     <div class="card-body p-4">
                         <h4 class="card-title">{{ produto.nome }}</h4>
                         <h5>R$ {{ produto.valor }}</h5>
