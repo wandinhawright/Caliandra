@@ -1,15 +1,19 @@
 from datetime import datetime, timedelta
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import ItemPedido, Usuario, Produto, Pedido
 from .forms import LoginForm, RegistroForm, VerificationCodeForm, CheckoutForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum
 import random
+import json
 # Create your views here.
 class InicioView(View):
     def get(self, request):
@@ -291,3 +295,94 @@ class FinalizacaoView(LoginRequiredMixin, View):
         except Exception as e:
             messages.error(request, 'Erro ao carregar informações do pedido.')
             return redirect('catalogo')
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AtualizarQuantidadeView(LoginRequiredMixin, View):
+    """View para atualizar quantidade de item no carrinho via AJAX"""
+    login_url = '/login/'
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            item_id = data.get('item_id')
+            nova_quantidade = int(data.get('quantidade', 1))
+            
+            if nova_quantidade < 1:
+                return JsonResponse({'success': False, 'error': 'Quantidade deve ser maior que zero'})
+            
+            # Busca o item do pedido
+            item = get_object_or_404(ItemPedido, id=item_id, pedido__usuario=request.user, pedido__situacao='CARRINHO')
+            
+            # Atualiza a quantidade
+            item.quantidade = nova_quantidade
+            item.save()
+            
+            # Recalcula o total do pedido
+            pedido = item.pedido
+            total = sum(item.get_total_item_price() for item in pedido.itempedido_set.all())
+            pedido.total = total
+            pedido.save()
+            
+            return JsonResponse({
+                'success': True,
+                'item_total': float(item.get_total_item_price()),
+                'pedido_total': float(pedido.total),
+                'quantidade': item.quantidade
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RemoverItemView(LoginRequiredMixin, View):
+    """View para remover item do carrinho via AJAX"""
+    login_url = '/login/'
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            item_id = data.get('item_id')
+            
+            # Busca e remove o item
+            item = get_object_or_404(ItemPedido, id=item_id, pedido__usuario=request.user, pedido__situacao='CARRINHO')
+            pedido = item.pedido
+            item.delete()
+            
+            # Recalcula o total do pedido
+            total = sum(item.get_total_item_price() for item in pedido.itempedido_set.all())
+            pedido.total = total
+            pedido.save()
+            
+            return JsonResponse({
+                'success': True,
+                'pedido_total': float(pedido.total),
+                'items_count': pedido.itempedido_set.count()
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EsvaziarCarrinhoView(LoginRequiredMixin, View):
+    """View para esvaziar carrinho via AJAX"""
+    login_url = '/login/'
+    
+    def post(self, request):
+        try:
+            # Busca o carrinho do usuário
+            pedido = get_object_or_404(Pedido, usuario=request.user, situacao='CARRINHO')
+            
+            # Remove todos os itens
+            pedido.itempedido_set.all().delete()
+            
+            # Zera o total
+            pedido.total = 0
+            pedido.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Carrinho esvaziado com sucesso!'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
