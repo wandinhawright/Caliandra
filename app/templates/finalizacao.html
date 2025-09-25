@@ -127,22 +127,11 @@
                                 <small>{{ pedido.usuario.telefone }}</small>
                             </p>
                             
-                            {% if pedido.endereco_entrega %}
-                            <hr>
-                            <p class="mb-2">
-                                <strong>Endereço:</strong><br>
-                                {{ pedido.endereco_entrega }}<br>
-                                {{ pedido.cidade }} - {{ pedido.cep }}
-                            </p>
-                            {% endif %}
-                            
-                            {% if pedido.observacoes %}
                             <hr>
                             <p class="mb-0">
-                                <strong>Observações:</strong><br>
-                                <small>{{ pedido.observacoes }}</small>
+                                <strong>Endereço:</strong><br>
+                                {{ pedido.usuario.endereco }}
                             </p>
-                            {% endif %}
                         </div>
                     </div>
 

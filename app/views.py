@@ -227,11 +227,11 @@ class FinalizarPedidoView(LoginRequiredMixin, View):
             try:
                 pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
                 
-                # Salvar informações de entrega
-                pedido.endereco_entrega = form.cleaned_data['endereco_entrega']
-                pedido.cidade = form.cleaned_data['cidade']
-                pedido.cep = form.cleaned_data['cep']
-                pedido.observacoes = form.cleaned_data['observacoes']
+                # Use user's existing address instead of collecting delivery information
+                pedido.endereco_entrega = request.user.endereco
+                pedido.cidade = None  # Will be extracted from user address if needed
+                pedido.cep = None     # Will be extracted from user address if needed
+                pedido.observacoes = None  # No observations needed
                 
                 # Muda a situação para "FEITO", transformando o carrinho em um pedido real
                 pedido.situacao = 'FEITO'

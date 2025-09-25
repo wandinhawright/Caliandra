@@ -87,30 +87,31 @@
                     </div>
                 </div>
 
-                <!-- Formulário de Checkout -->
+                <!-- Informações de Checkout -->
                 <div class="col-lg-4">
                     <div class="card">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Informações de Entrega</h5>
+                            <h5 class="mb-0"><i class="fas fa-user me-2"></i>Informações do Cliente</h5>
                         </div>
                         <div class="card-body">
                             <form action="{% url 'finalizar_pedido' %}" method="post" id="checkout-form">
                                 {% csrf_token %}
                                 
-                                <!-- Informações do usuário (readonly) -->
+                                <!-- Informações do usuário -->
                                 <div class="mb-3">
                                     <label class="form-label">Cliente</label>
-                                    <div class="border rounded p-2 bg-light">
+                                    <div class="border rounded p-3 bg-light">
                                         <strong>{{ user.nome }}</strong><br>
                                         <small class="text-muted">{{ user.email }}</small><br>
-                                        <small class="text-muted">{{ user.telefone }}</small>
+                                        <small class="text-muted">{{ user.telefone }}</small><br>
+                                        <small class="text-muted">{{ user.endereco }}</small>
                                     </div>
                                 </div>
 
-                                <!-- Campos do formulário -->
-                                {{ form|crispy }}
-
-                                <hr>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Utilizaremos o endereço cadastrado em seu perfil para organizar a entrega.
+                                </div>
                                 
                                 <!-- Botões de ação -->
                                 <div class="d-grid gap-2">

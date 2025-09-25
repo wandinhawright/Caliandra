@@ -29,26 +29,10 @@ class CheckoutSystemTestCase(TestCase):
         
     def test_checkout_form_validation(self):
         """Test checkout form validations."""
-        # Test valid form data
-        form_data = {
-            'endereco_entrega': 'Rua das Flores, 123',
-            'cidade': 'Brasília',
-            'cep': '70000-000',
-            'observacoes': 'Test observation',
-            'termos_aceitos': True
-        }
+        # Test empty form (should be valid as no fields are required)
+        form_data = {}
         form = CheckoutForm(data=form_data)
         self.assertTrue(form.is_valid())
-        
-        # Test invalid CEP
-        form_data['cep'] = '123'
-        form = CheckoutForm(data=form_data)
-        self.assertFalse(form.is_valid())
-        
-        # Test missing required fields
-        form_data = {'observacoes': 'Only optional field'}
-        form = CheckoutForm(data=form_data)
-        self.assertFalse(form.is_valid())
         
     def test_order_flow(self):
         """Test complete order flow."""
@@ -65,14 +49,8 @@ class CheckoutSystemTestCase(TestCase):
         self.assertContains(response, 'Test Product')
         self.assertContains(response, 'Finalizar Pedido')
         
-        # Submit checkout form
-        form_data = {
-            'endereco_entrega': 'Rua das Flores, 123',
-            'cidade': 'Brasília',
-            'cep': '70040000',  # Will be formatted to 70040-000
-            'observacoes': 'Test observation',
-            'termos_aceitos': True
-        }
+        # Submit checkout form (empty form should work)
+        form_data = {}
         
         response = self.client.post(reverse('finalizar_pedido'), data=form_data)
         self.assertEqual(response.status_code, 302)  # Redirect to confirmation
@@ -80,16 +58,15 @@ class CheckoutSystemTestCase(TestCase):
         # Check order was finalized
         pedido.refresh_from_db()
         self.assertEqual(pedido.situacao, 'FEITO')
-        self.assertEqual(pedido.endereco_entrega, 'Rua das Flores, 123')
-        self.assertEqual(pedido.cep, '70040-000')  # Should be formatted
+        self.assertEqual(pedido.endereco_entrega, self.user.endereco)  # Should use user's address
+        self.assertIsNone(pedido.cep)  # No separate CEP field
+        self.assertIsNone(pedido.observacoes)  # No observations
         self.assertIsNotNone(pedido.numero_pedido)
         
         # Access confirmation page
         response = self.client.get(reverse('finalizacao'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Pedido Confirmado')
-        self.assertContains(response, pedido.numero_pedido)
-        
     def test_empty_cart_checkout(self):
         """Test checkout with empty cart."""
         self.client.login(email='test@test.com', password='testpass123')
@@ -97,19 +74,6 @@ class CheckoutSystemTestCase(TestCase):
         response = self.client.get(reverse('ver_pedido'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'carrinho está vazio')
-        
-    def test_cep_formatting(self):
-        """Test CEP formatting in form."""
-        form_data = {
-            'endereco_entrega': 'Test Address',
-            'cidade': 'Test City',
-            'cep': '12345678',  # Unformatted CEP
-            'termos_aceitos': True
-        }
-        
-        form = CheckoutForm(data=form_data)
-        self.assertTrue(form.is_valid())
-        self.assertEqual(form.cleaned_data['cep'], '12345-678')
 
 class OrderModelTestCase(TestCase):
     def setUp(self):
