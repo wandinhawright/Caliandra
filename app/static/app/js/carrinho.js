@@ -8,6 +8,8 @@ class CarrinhoManager {
         this.baseUrl = window.location.origin;
         this.csrfToken = this.getCsrfToken();
         this.debounceTimeout = null;
+
+        
         this.init();
     }
 
@@ -21,7 +23,15 @@ class CarrinhoManager {
     }
 
     getCsrfToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        // Tenta pegar do input hidden primeiro (form)
+        const inputToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (inputToken) return inputToken;
+        
+        // Fallback: pega do cookie (padrão Django)
+        const cookieToken = document.cookie
+            .split('; ')
+            .find(cookie => cookie.startsWith('csrftoken='));
+        return cookieToken ? cookieToken.split('=')[1] : '';
     }
 
     bindEvents() {
@@ -32,6 +42,7 @@ class CarrinhoManager {
             const minusBtn = e.target.closest('.quantity-btn-minus');
             const removeBtn = e.target.closest('.remove-btn');
             const clearCartBtn = e.target.closest('.btn-clear-cart');
+            const finalizeBtn = e.target.closest('#btn-finalize-order');
 
             if (plusBtn) {
                 this.handleQuantityChange(plusBtn, 'plus');
@@ -41,6 +52,8 @@ class CarrinhoManager {
                 this.handleRemoveItem(removeBtn);
             } else if (clearCartBtn) {
                 this.handleClearCart();
+            } else if (finalizeBtn) {
+                this.handleFinalizeOrder();
             }
         });
 
@@ -75,16 +88,34 @@ class CarrinhoManager {
         document.querySelectorAll('.cart-item').forEach(function (item) {
             const el = item.querySelector('.item-total');
             if (!el) return;
-            // Normalize Brazilian currency: remove 'R$', remove thousands separators '.', replace decimal comma with dot
+            
+            // Extrai o valor: "R$ 171.54" ou "R$ 171,54"
             let text = el.textContent.replace('R$', '').trim();
-            text = text.replace(/\./g, '').replace(/,/g, '.');
+            
+            // Remove espaços
+            text = text.replace(/\s/g, '');
+            
+            // Normaliza para formato numérico JavaScript (ponto decimal)
+            // Se tiver vírgula, assume formato brasileiro: 1.234,56 -> 1234.56
+            // Se tiver só ponto, assume formato americano: 1,234.56 -> 1234.56
+            if (text.includes(',')) {
+                // Formato brasileiro: remove pontos (separador de milhar) e troca vírgula por ponto
+                text = text.replace(/\./g, '').replace(',', '.');
+            } else {
+                // Formato americano: remove vírgulas (separador de milhar)
+                text = text.replace(/,/g, '');
+            }
+            
             const price = parseFloat(text);
-            if (!isNaN(price)) total += price;
+            if (!isNaN(price)) {
+                total += price;
+            }
         });
 
         const totalEl = document.getElementById('cart-total') || document.querySelector('.cart-total');
         if (totalEl) {
-            totalEl.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+            // Formata em padrão americano (ponto decimal) para consistência
+            totalEl.textContent = 'R$ ' + total.toFixed(2);
         }
     }
 
@@ -94,6 +125,9 @@ class CarrinhoManager {
         const input = itemRow.querySelector('.quantity-input');
         let currentQuantity = parseInt(input.value) || 1;
 
+        // Guarda o valor anterior para rollback em caso de erro
+        input.dataset.previousValue = currentQuantity;
+
         if (action === 'plus') {
             currentQuantity += 1;
         } else if (action === 'minus' && currentQuantity > 1) {
@@ -102,9 +136,15 @@ class CarrinhoManager {
             return; // Don't allow quantity less than 1
         }
 
+        // Validação máxima
+        if (currentQuantity > 99) {
+            this.showFeedback('Quantidade máxima é 99', 'error');
+            return;
+        }
+
         input.value = currentQuantity;
-    // Update minus button state immediately so UI reflects allowed actions
-    this.updateDecreaseButtonState(itemRow);
+        // Update minus button state immediately so UI reflects allowed actions
+        this.updateDecreaseButtonState(itemRow);
         this.updateQuantity(itemId, currentQuantity, itemRow);
     }
 
@@ -114,11 +154,22 @@ class CarrinhoManager {
         this.debounceTimeout = setTimeout(() => {
             const itemRow = input.closest('.cart-item');
             const itemId = itemRow.dataset.itemId;
-            let quantity = parseInt(input.value) || 1;
+            let quantity = parseInt(input.value) || 0;
 
-            if (quantity < 1) {
-                quantity = 1;
+            // Se quantidade for 0 ou menor, remover o item
+            if (quantity <= 0) {
+                const removeBtn = itemRow.querySelector('.remove-btn');
+                if (removeBtn) {
+                    this.handleRemoveItem(removeBtn);
+                }
+                return;
+            }
+
+            // Se quantidade for maior que 99, limitar a 99
+            if (quantity > 99) {
+                quantity = 99;
                 input.value = quantity;
+                this.showFeedback('Quantidade máxima é 99', 'error');
             }
 
             // Reflect the change in the minus button immediately
@@ -130,8 +181,6 @@ class CarrinhoManager {
 
     async updateQuantity(itemId, quantidade, itemRow) {
         try {
-            this.setLoading(itemRow, true);
-
             const response = await fetch(`${this.baseUrl}/ajax/atualizar-quantidade/`, {
                 method: 'POST',
                 headers: {
@@ -144,12 +193,27 @@ class CarrinhoManager {
                 })
             });
 
+            // Verifica se a resposta HTTP foi bem-sucedida
+            if (!response.ok) {
+                // Tenta parsear erro do servidor
+                let errorMessage = `Erro HTTP ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                    console.error('[CARRINHO] Erro do servidor:', errorData);
+                } catch (e) {
+                    // Se não conseguir parsear JSON, usa mensagem padrão
+                    console.error('[CARRINHO] Erro ao parsear resposta de erro');
+                }
+                throw new Error(errorMessage);
+            }
+
             const data = await response.json();
 
             if (data.success) {
-                // Update item total
+                // Update item total - usa formato simples com ponto decimal
                 const itemTotal = itemRow.querySelector('.item-total');
-                itemTotal.textContent = this.formatCurrency(data.item_total);
+                itemTotal.textContent = 'R$ ' + parseFloat(data.item_total).toFixed(2);
 
                 // Ensure decrease button state matches the new quantity
                 this.updateDecreaseButtonState(itemRow);
@@ -163,10 +227,24 @@ class CarrinhoManager {
                 throw new Error(data.error || 'Erro ao atualizar quantidade');
             }
         } catch (error) {
-            console.error('Erro:', error);
-            this.showFeedback('Erro ao atualizar quantidade', 'error');
-        } finally {
-            this.setLoading(itemRow, false);
+            console.error('Erro ao atualizar quantidade:', error);
+            
+            // Mensagens de erro específicas
+            let errorMsg = 'Erro ao atualizar quantidade';
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMsg = 'Erro de conexão. Verifique sua internet.';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+            
+            this.showFeedback(errorMsg, 'error');
+            
+            // Reverte a quantidade no input em caso de erro
+            const input = itemRow.querySelector('.quantity-input');
+            if (input && input.dataset.previousValue) {
+                input.value = input.dataset.previousValue;
+                this.updateDecreaseButtonState(itemRow);
+            }
         }
     }
 
@@ -186,8 +264,6 @@ class CarrinhoManager {
         }
 
         try {
-            this.setLoading(itemRow, true);
-
             const response = await fetch(`${this.baseUrl}/ajax/remover-item/`, {
                 method: 'POST',
                 headers: {
@@ -198,6 +274,18 @@ class CarrinhoManager {
                     item_id: itemId
                 })
             });
+
+            // Verifica resposta HTTP
+            if (!response.ok) {
+                let errorMessage = `Erro HTTP ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // Ignora erro de parse
+                }
+                throw new Error(errorMessage);
+            }
 
             const data = await response.json();
 
@@ -220,14 +308,21 @@ class CarrinhoManager {
                     }
                 }, 300);
 
-                this.showFeedback('Item removido do carrinho!', 'success');
+                this.showFeedback(data.message || 'Item removido do carrinho!', 'success');
             } else {
                 throw new Error(data.error || 'Erro ao remover item');
             }
         } catch (error) {
-            this.setLoading(itemRow, false);
-            console.error('Erro:', error);
-            this.showFeedback('Erro ao remover item', 'error');
+            console.error('Erro ao remover item:', error);
+            
+            let errorMsg = 'Erro ao remover item';
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMsg = 'Erro de conexão. Verifique sua internet.';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+            
+            this.showFeedback(errorMsg, 'error');
         }
     }
 
@@ -251,6 +346,18 @@ class CarrinhoManager {
                 }
             });
 
+            // Verifica resposta HTTP
+            if (!response.ok) {
+                let errorMessage = `Erro HTTP ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // Ignora erro de parse
+                }
+                throw new Error(errorMessage);
+            }
+
             const data = await response.json();
 
             if (data.success) {
@@ -260,15 +367,24 @@ class CarrinhoManager {
                 throw new Error(data.error || 'Erro ao esvaziar carrinho');
             }
         } catch (error) {
-            console.error('Erro:', error);
-            this.showFeedback('Erro ao esvaziar carrinho', 'error');
+            console.error('Erro ao esvaziar carrinho:', error);
+            
+            let errorMsg = 'Erro ao esvaziar carrinho';
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMsg = 'Erro de conexão. Verifique sua internet.';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+            
+            this.showFeedback(errorMsg, 'error');
         }
     }
 
     updateCartTotal(total) {
         const totalElement = document.querySelector('.cart-total');
         if (totalElement) {
-            totalElement.textContent = this.formatCurrency(total);
+            // Usa formato simples com ponto decimal para consistência
+            totalElement.textContent = 'R$ ' + parseFloat(total).toFixed(2);
         }
     }
 
@@ -316,13 +432,11 @@ class CarrinhoManager {
         if (cartSummary) {
             cartSummary.style.display = 'none';
         }
-    }
 
-    setLoading(itemRow, isLoading) {
-        if (isLoading) {
-            itemRow.classList.add('loading');
-        } else {
-            itemRow.classList.remove('loading');
+        // Hide cart actions (clear and finalize buttons)
+        const cartActions = document.querySelector('.cart-actions');
+        if (cartActions) {
+            cartActions.style.display = 'none';
         }
     }
 
@@ -410,6 +524,29 @@ class CarrinhoManager {
                 modal.remove();
             });
         });
+    }
+
+    async handleFinalizeOrder() {
+        // Get cart total
+        const totalElement = document.querySelector('.cart-total');
+        const total = totalElement ? totalElement.textContent : 'R$ 0.00';
+
+        // Show confirmation modal
+        const confirmed = await this.showConfirmationModal(
+            'Confirmar Pedido',
+            `Tem certeza que deseja finalizar o pedido no valor de ${total}?<br><br>
+            <strong>Após a confirmação, você receberá:</strong><br>
+            • Um e-mail com os detalhes do pedido<br>
+            • Instruções de pagamento via WhatsApp<br>
+            • Atualizações sobre a compra coletiva`,
+            'Confirmar Pedido',
+            'btn-success'
+        );
+
+        if (confirmed) {
+            // Redirect to finalize order endpoint
+            window.location.href = this.baseUrl + '/finalizar-pedido/';
+        }
     }
 }
 

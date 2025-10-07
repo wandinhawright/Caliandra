@@ -1,6 +1,7 @@
 <c-header>
 </c-header>
 {% load static %}
+{% load l10n %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -23,6 +24,7 @@
 </head>
 
 <body class="cart-container">
+    {% csrf_token %}
     <div class="container">
         {% if pedido and itens %}
             <!-- Cart Header -->
@@ -57,7 +59,7 @@
                         <div class="col-md-4 col-9">
                             <div class="product-info">
                                 <h5 class="product-name">{{ item.produto.nome }}</h5>
-                                <p class="product-price">R$ {{ item.produto.valor|floatformat:2 }}</p>
+                                <p class="product-price">R$ {% localize off %}{{ item.produto.valor|floatformat:2 }}{% endlocalize %}</p>
                                 {% if item.produto.marca %}
                                     <small class="text-muted">{{ item.produto.marca }}</small>
                                 {% endif %}
@@ -85,7 +87,7 @@
                         <!-- Item Total & Remove -->
                         <div class="col-md-2 col-4 mt-3 mt-md-0 text-end">
                             <div class="d-flex flex-column align-items-end gap-2">
-                                <strong class="item-total">R$ {{ item.get_total_item_price|floatformat:2 }}</strong>
+                                <strong class="item-total">R$ {% localize off %}{{ item.get_total_item_price|floatformat:2 }}{% endlocalize %}</strong>
                                 <button type="button" class="remove-btn" title="Remover item">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -99,9 +101,29 @@
             <!-- Cart Total (Dynamic) -->
             <div class="cart-summary text-end mt-4">
                 <h4 style="font-family: 'Alexandria', sans-serif; color: #333;">Total do Pedido:</h4>
-                <span id="cart-total" class="cart-total fs-3 fw-bold">R$ {{ pedido.total|floatformat:2 }}</span>
+                <span id="cart-total" class="cart-total fs-3 fw-bold">R$ {% localize off %}{{ pedido.total|floatformat:2 }}{% endlocalize %}</span>
             </div>
             {# total recalculation is handled centrally by app/static/app/js/carrinho.js #}
+
+            <!-- Cart Actions -->
+            <div class="cart-actions">
+                <div class="action-left">
+                    <a href="{% url 'catalogo' %}" class="btn btn-continue-shopping">
+                        <i class="fas fa-arrow-left"></i>Continuar Comprando
+                    </a>
+                </div>
+                
+                <div class="action-right">
+                    {% if pedido.itempedido_set.exists %}
+                        <button type="button" class="btn btn-clear-cart">
+                            <i class="fas fa-trash"></i>Esvaziar Carrinho
+                        </button>
+                        <button type="button" class="btn btn-finalize" id="btn-finalize-order">
+                            <i class="fas fa-check-circle"></i>Finalizar Pedido
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
 
         {% else %}
             <!-- Empty Cart -->
@@ -124,13 +146,6 @@
                 </div>
             </div>
         {% endif %}
-
-        <!-- Continue Shopping Link -->
-        <div class="text-center mt-4">
-            <a href="{% url 'catalogo' %}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left me-2"></i>Continuar Comprando
-            </a>
-        </div>
     </div>
 
     <!-- Scripts -->

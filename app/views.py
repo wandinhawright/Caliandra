@@ -224,53 +224,53 @@ class VerPedidoView(LoginRequiredMixin, View):
 class FinalizarPedidoView(LoginRequiredMixin, View):
     login_url = '/login/'
     
-    def post(self, request):
-        form = CheckoutForm(request.POST)
-        
-        if form.is_valid():
-            try:
-                pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
-                
-                
-                # Muda a situação para "FEITO", transformando o carrinho em um pedido real
-                pedido.situacao = 'FEITO'
-                pedido.save()
-                
-                # Aqui você pode adicionar lógica de pagamento, notificação, etc.
-                messages.success(request, f'Seu pedido #{pedido.numero_pedido} foi finalizado com sucesso!')
-                
-                # Enviar email de confirmação (opcional)
-                try:
-                    send_mail(
-                        f'Pedido #{pedido.numero_pedido} - Compra Coletiva Caliandra',
-                        f'Olá {pedido.usuario.nome}!\n\nSeu pedido #{pedido.numero_pedido} foi recebido com sucesso.\n\nTotal: R$ {pedido.total}\n\nAcompanhe o status do seu pedido através do nosso WhatsApp.\n\nObrigado por participar da nossa compra coletiva!',
-                        settings.DEFAULT_FROM_EMAIL,
-                        [pedido.usuario.email],
-                        fail_silently=True,
-                    )
-                except Exception as e:
-                    # Log do erro, mas não interrompe o processo
-                    pass
-                
-                return redirect('finalizacao')
-                
-            except Pedido.DoesNotExist:
-                messages.error(request, 'Você não tem um carrinho ativo para finalizar.')
-                return redirect('ver_pedido')
-        else:
-            # Se o formulário não é válido, retorna para a página com os erros
-            try:
-                pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
-                itens = ItemPedido.objects.filter(pedido=pedido)
-            except Pedido.DoesNotExist:
-                pedido = None
-                itens = None
+    def get(self, request):
+        """
+        Permite finalizar pedido diretamente via GET quando clica no botão.
+        Simplifica o fluxo: usuário clica em "Finalizar Pedido" e pronto!
+        """
+        try:
+            pedido = Pedido.objects.get(usuario=request.user, situacao='CARRINHO')
             
-            return render(request, 'ver_pedido.html', {
-                'pedido': pedido, 
-                'itens': itens,
-                'form': form
-            })
+            # Verifica se o carrinho tem itens
+            if not pedido.itempedido_set.exists():
+                messages.warning(request, 'Seu carrinho está vazio.')
+                return redirect('ver_pedido')
+            
+            # Muda a situação para "FEITO", transformando o carrinho em um pedido real
+            pedido.situacao = 'FEITO'
+            pedido.save()
+            
+            # Mensagem de sucesso (usa o ID do pedido como número)
+            messages.success(request, f'Seu pedido #{pedido.id} foi finalizado com sucesso!')
+            
+            try:
+                resultado = send_mail(
+                    subject=f'Pedido #{pedido.id} - Compra Coletiva Caliandra',
+                    message=f'Olá {pedido.usuario.nome}!\n\nSeu pedido #{pedido.id} foi recebido com sucesso.\n\nTotal: R$ {pedido.total}\n\nAcompanhe o status do seu pedido através do nosso WhatsApp.\n\nObrigado por participar da nossa compra coletiva!',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[pedido.usuario.email],
+                    fail_silently=False,  # Mostra erros se houver
+                )
+                print(f'[EMAIL] E-mail enviado com sucesso! Resultado: {resultado}')
+            except Exception as e:
+                # Log do erro no console
+                print(f'[EMAIL] Erro ao enviar e-mail: {type(e).__name__}: {e}')
+                # Não interrompe o processo mesmo se o e-mail falhar
+                pass
+            
+            return redirect('finalizacao')
+            
+        except Pedido.DoesNotExist:
+            messages.error(request, 'Você não tem um carrinho ativo para finalizar.')
+            return redirect('ver_pedido')
+    
+    def post(self, request):
+        """
+        Mantém compatibilidade com POST caso haja formulário no futuro.
+        Por enquanto, apenas chama o GET.
+        """
+        return self.get(request)
 class FinalizacaoView(LoginRequiredMixin, View):
     login_url = '/login/'
 
@@ -296,22 +296,57 @@ class FinalizacaoView(LoginRequiredMixin, View):
             messages.error(request, 'Erro ao carregar informações do pedido.')
             return redirect('catalogo')
 
-@method_decorator(csrf_exempt, name='dispatch')
 class AtualizarQuantidadeView(LoginRequiredMixin, View):
     """View para atualizar quantidade de item no carrinho via AJAX"""
     login_url = '/login/'
     
     def post(self, request):
         try:
+            # Valida Content-Type
+            if request.content_type != 'application/json':
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Content-Type deve ser application/json'
+                }, status=400)
+            
             data = json.loads(request.body)
             item_id = data.get('item_id')
-            nova_quantidade = int(data.get('quantidade', 1))
+            nova_quantidade = data.get('quantidade')
+            
+            # Validações
+            if not item_id:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'item_id é obrigatório'
+                }, status=400)
+                
+            try:
+                nova_quantidade = int(nova_quantidade)
+            except (TypeError, ValueError):
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Quantidade deve ser um número válido'
+                }, status=400)
             
             if nova_quantidade < 1:
-                return JsonResponse({'success': False, 'error': 'Quantidade deve ser maior que zero'})
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Quantidade deve ser maior que zero'
+                }, status=400)
+            
+            if nova_quantidade > 99:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Quantidade máxima é 99'
+                }, status=400)
             
             # Busca o item do pedido
-            item = get_object_or_404(ItemPedido, id=item_id, pedido__usuario=request.user, pedido__situacao='CARRINHO')
+            item = get_object_or_404(
+                ItemPedido, 
+                id=item_id, 
+                pedido__usuario=request.user, 
+                pedido__situacao='CARRINHO'
+            )
             
             # Atualiza a quantidade
             item.quantidade = nova_quantidade
@@ -330,22 +365,50 @@ class AtualizarQuantidadeView(LoginRequiredMixin, View):
                 'quantidade': item.quantidade
             })
             
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False, 
+                'error': 'JSON inválido'
+            }, status=400)
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            # Log do erro no servidor (em produção use logging)
+            print(f"Erro ao atualizar quantidade: {e}")
+            return JsonResponse({
+                'success': False, 
+                'error': 'Erro interno do servidor'
+            }, status=500)
 
-@method_decorator(csrf_exempt, name='dispatch')
 class RemoverItemView(LoginRequiredMixin, View):
     """View para remover item do carrinho via AJAX"""
     login_url = '/login/'
     
     def post(self, request):
         try:
+            # Valida Content-Type
+            if request.content_type != 'application/json':
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Content-Type deve ser application/json'
+                }, status=400)
+            
             data = json.loads(request.body)
             item_id = data.get('item_id')
             
+            if not item_id:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'item_id é obrigatório'
+                }, status=400)
+            
             # Busca e remove o item
-            item = get_object_or_404(ItemPedido, id=item_id, pedido__usuario=request.user, pedido__situacao='CARRINHO')
+            item = get_object_or_404(
+                ItemPedido, 
+                id=item_id, 
+                pedido__usuario=request.user, 
+                pedido__situacao='CARRINHO'
+            )
             pedido = item.pedido
+            produto_nome = item.produto.nome
             item.delete()
             
             # Recalcula o total do pedido
@@ -356,13 +419,22 @@ class RemoverItemView(LoginRequiredMixin, View):
             return JsonResponse({
                 'success': True,
                 'pedido_total': float(pedido.total),
-                'items_count': pedido.itempedido_set.count()
+                'items_count': pedido.itempedido_set.count(),
+                'message': f'{produto_nome} removido com sucesso'
             })
             
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False, 
+                'error': 'JSON inválido'
+            }, status=400)
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            print(f"Erro ao remover item: {e}")
+            return JsonResponse({
+                'success': False, 
+                'error': 'Erro interno do servidor'
+            }, status=500)
 
-@method_decorator(csrf_exempt, name='dispatch')
 class EsvaziarCarrinhoView(LoginRequiredMixin, View):
     """View para esvaziar carrinho via AJAX"""
     login_url = '/login/'
@@ -371,6 +443,15 @@ class EsvaziarCarrinhoView(LoginRequiredMixin, View):
         try:
             # Busca o carrinho do usuário
             pedido = get_object_or_404(Pedido, usuario=request.user, situacao='CARRINHO')
+            
+            # Conta itens antes de remover
+            items_count = pedido.itempedido_set.count()
+            
+            if items_count == 0:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Carrinho já está vazio'
+                }, status=400)
             
             # Remove todos os itens
             pedido.itempedido_set.all().delete()
@@ -385,4 +466,8 @@ class EsvaziarCarrinhoView(LoginRequiredMixin, View):
             })
             
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            print(f"Erro ao esvaziar carrinho: {e}")
+            return JsonResponse({
+                'success': False, 
+                'error': 'Erro interno do servidor'
+            }, status=500)
