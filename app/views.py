@@ -252,11 +252,7 @@ class FinalizarPedidoView(LoginRequiredMixin, View):
                     recipient_list=[pedido.usuario.email],
                     fail_silently=False,  # Mostra erros se houver
                 )
-                print(f'[EMAIL] E-mail enviado com sucesso! Resultado: {resultado}')
             except Exception as e:
-                # Log do erro no console
-                print(f'[EMAIL] Erro ao enviar e-mail: {type(e).__name__}: {e}')
-                # Não interrompe o processo mesmo se o e-mail falhar
                 pass
             
             return redirect('finalizacao')
@@ -371,8 +367,6 @@ class AtualizarQuantidadeView(LoginRequiredMixin, View):
                 'error': 'JSON inválido'
             }, status=400)
         except Exception as e:
-            # Log do erro no servidor (em produção use logging)
-            print(f"Erro ao atualizar quantidade: {e}")
             return JsonResponse({
                 'success': False, 
                 'error': 'Erro interno do servidor'
@@ -429,7 +423,6 @@ class RemoverItemView(LoginRequiredMixin, View):
                 'error': 'JSON inválido'
             }, status=400)
         except Exception as e:
-            print(f"Erro ao remover item: {e}")
             return JsonResponse({
                 'success': False, 
                 'error': 'Erro interno do servidor'
@@ -466,7 +459,6 @@ class EsvaziarCarrinhoView(LoginRequiredMixin, View):
             })
             
         except Exception as e:
-            print(f"Erro ao esvaziar carrinho: {e}")
             return JsonResponse({
                 'success': False, 
                 'error': 'Erro interno do servidor'
