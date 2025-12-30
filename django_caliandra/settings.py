@@ -140,6 +140,7 @@ STATIC_URL = '/static/'
 # Diretórios onde o Django procura por arquivos estáticos
 STATICFILES_DIRS = [
     BASE_DIR / 'app' / 'static',
+    BASE_DIR / 'app' / 'static' / 'app' / 'dist',  # Vite build output
 ]
 
 # Diretório onde os arquivos estáticos são coletados para produção

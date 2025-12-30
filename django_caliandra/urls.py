@@ -15,34 +15,41 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 
 from app.views import (
-    BlogView, FinalizacaoView, InicioView, LoginView, LogoutView, RegistroView, VerifyCodeView, 
-    CatalogoView, AdicionarAoPedidoView, VerPedidoView, FinalizarPedidoView,
-    AtualizarQuantidadeView, RemoverItemView, EsvaziarCarrinhoView
+    LogoutView, AdicionarAoPedidoView, FinalizarPedidoView,
+    AtualizarQuantidadeView, RemoverItemView, EsvaziarCarrinhoView,
+    CarrinhoAPIView, VueAppView, ProdutosAPIView, PerfilAPIView, 
+    RegistroAPIView, LoginAPIView, VerificationAPIView, PerfilUpdateAPIView
 )
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', InicioView.as_view(), name='inicio'),
-    path('login/', LoginView.as_view(), name='login'),
-    path('registro/', RegistroView.as_view(), name='registro'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('verificacao/', VerifyCodeView.as_view(), name='verificacao'),
-    path('catalogo/', CatalogoView.as_view(), name='catalogo'),
+    
+    # API Endpoints para o Vue.js
+    path('api/carrinho/', CarrinhoAPIView.as_view(), name='api_carrinho'),
+    path('api/produtos/', ProdutosAPIView.as_view(), name='api_produtos'),
+    path('api/perfil/', PerfilAPIView.as_view(), name='api_perfil'),
+    path('api/perfil/atualizar/', PerfilUpdateAPIView.as_view(), name='api_perfil_update'),
+    path('api/auth/login/', LoginAPIView.as_view(), name='api_login'),
+    path('api/auth/registro/', RegistroAPIView.as_view(), name='api_registro'),
+    path('api/auth/verificacao/', VerificationAPIView.as_view(), name='api_verificacao'),
+    path('api/auth/logout/', LogoutView.as_view(), name='api_logout'),
+    
+    # Endpoints de Carrinho (mantidos para compatibilidade)
     path('adicionar-ao-pedido/<int:produto_id>/', AdicionarAoPedidoView.as_view(), name='adicionar_ao_pedido'),
-    path('ver-pedido/', VerPedidoView.as_view(), name='ver_pedido'),
     path('finalizar-pedido/', FinalizarPedidoView.as_view(), name='finalizar_pedido'),
-    path('finalizacao/', FinalizacaoView.as_view(), name='finalizacao'),
-    path('blog/', BlogView.as_view(), name='blog'),  
-    # AJAX endpoints for cart management
     path('ajax/atualizar-quantidade/', AtualizarQuantidadeView.as_view(), name='atualizar_quantidade'),
     path('ajax/remover-item/', RemoverItemView.as_view(), name='remover_item'),
     path('ajax/esvaziar-carrinho/', EsvaziarCarrinhoView.as_view(), name='esvaziar_carrinho'),
+    
+    # Vue.js SPA - Serve para TODAS as rotas (exceto admin e api)
+    path('', VueAppView.as_view(), name='vue_app'),
+    re_path(r'^.*/$', VueAppView.as_view()),  # Catch-all para todas as subrotas
 ]
 
 # Servir arquivos estáticos em desenvolvimento

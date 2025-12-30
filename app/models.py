@@ -59,6 +59,7 @@ class Pedido(models.Model):
     
     # NOVO CAMPO para diferenciar carrinho de pedido
     situacao = models.CharField(
+        max_length=20,
         default='CARRINHO',
         choices=[
             ('CARRINHO', 'Carrinho'), # Carrinho ativo, não visível para admin

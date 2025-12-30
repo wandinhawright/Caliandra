@@ -494,5 +494,326 @@ class RegistroView(View):
     def get(self, request):
         form = RegistroForm()
         return render(request, 'registro.html', {'form': form})
+
+
+# ============================================
+# API Views para Vue.js Frontend
+# ============================================
+
+class CarrinhoAPIView(LoginRequiredMixin, View):
+    """API View para retornar dados do carrinho em JSON para o Vue"""
+    login_url = '/login/'
+    
+    def get(self, request):
+        try:
+            # Busca ou cria o pedido do usuário
+            pedido, created = Pedido.objects.get_or_create(
+                usuario=request.user,
+                situacao='CARRINHO',
+                defaults={'total': 0}
+            )
+            
+            # Serializa os itens do carrinho
+            items = []
+            for item in pedido.itempedido_set.select_related('produto').all():
+                items.append({
+                    'id': item.id,
+                    'produto': {
+                        'id': item.produto.id,
+                        'nome': item.produto.nome,
+                        'preco': float(item.produto.preco),
+                        'imagem': item.produto.imagem.url if item.produto.imagem else None,
+                        'descricao': item.produto.descricao,
+                    },
+                    'quantidade': item.quantidade,
+                    'preco_unitario': float(item.preco_unitario),
+                    'total': float(item.get_total_item_price())
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'carrinho': {
+                    'id': pedido.id,
+                    'items': items,
+                    'total': float(pedido.total),
+                    'items_count': len(items)
+                }
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+class VueAppView(View):
+    """View para servir o aplicativo Vue.js"""
+    def get(self, request):
+        return render(request, 'vue_app.html')
+
+
+class ProdutosAPIView(View):
+    """API View para retornar lista de produtos em JSON"""
+    
+    def get(self, request):
+        try:
+            produtos = Produto.objects.all()
+            
+            produtos_list = []
+            for produto in produtos:
+                produtos_list.append({
+                    'id': produto.id,
+                    'nome': produto.nome,
+                    'descricao': produto.descricao,
+                    'valor': float(produto.valor),
+                    'imagem': produto.imagem.url if produto.imagem else None,
+                    'marca': produto.marca,
+                    'tipo': produto.tipo,
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'produtos': produtos_list
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+class PerfilAPIView(LoginRequiredMixin, View):
+    """API View para retornar e atualizar perfil do usuário"""
+    login_url = '/login/'
+    
+    def get(self, request):
+        try:
+            usuario = request.user
+            return JsonResponse({
+                'success': True,
+                'usuario': {
+                    'nome': usuario.nome,
+                    'email': usuario.email,
+                    'telefone': usuario.telefone if hasattr(usuario, 'telefone') else '',
+                    'endereco': usuario.endereco if hasattr(usuario, 'endereco') else '',
+                }
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+class PerfilUpdateAPIView(LoginRequiredMixin, View):
+    """API View para atualizar perfil do usuário"""
+    login_url = '/login/'
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            usuario = request.user
+            
+            # Atualiza os campos
+            if 'nome' in data:
+                usuario.nome = data['nome']
+            if 'telefone' in data:
+                usuario.telefone = data['telefone']
+            if 'endereco' in data:
+                usuario.endereco = data['endereco']
+            
+            usuario.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Perfil atualizado com sucesso!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+class LoginAPIView(View):
+    """API View para login de usuário"""
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            password = data.get('password')
+            
+            if not email or not password:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Email e senha são obrigatórios'
+                }, status=400)
+            
+            usuario = authenticate(request, email=email, password=password)
+            
+            if usuario is not None:
+                login(request, usuario)
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Login realizado com sucesso!',
+                    'usuario': {
+                        'nome': usuario.nome,
+                        'email': usuario.email
+                    }
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Credenciais inválidas'
+                }, status=401)
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+class RegistroAPIView(View):
+    """API View para registro de usuário"""
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            
+            email = data.get('email')
+            password = data.get('password')
+            confirmar_password = data.get('confirmar_password')
+            nome = data.get('nome')
+            telefone = data.get('telefone')
+            
+            # Validações
+            if not all([email, password, nome, telefone]):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Todos os campos são obrigatórios'
+                }, status=400)
+            
+            if Usuario.objects.filter(email=email).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Este email já está cadastrado'
+                }, status=400)
+            
+            if password != confirmar_password:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'As senhas não coincidem'
+                }, status=400)
+            
+            # Gera código de verificação
+            verification_code = random.randint(100000, 999999)
+            request.session['verification_code'] = verification_code
+            request.session['verification_code_expires'] = (datetime.now() + timedelta(minutes=10)).isoformat()
+            request.session['registration_data'] = {
+                'email': email,
+                'password': password,
+                'nome': nome,
+                'telefone': telefone
+            }
+            
+            # Envia email
+            try:
+                send_mail(
+                    'Código de Verificação de Cadastro',
+                    f'Olá! Seu código para finalizar o cadastro é: {verification_code}',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Código de verificação enviado para o seu email'
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Erro ao enviar email: {str(e)}'
+                }, status=500)
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+class VerificationAPIView(View):
+    """API View para verificação de código"""
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            user_code = data.get('code')
+            
+            # Recupera dados da sessão
+            stored_code = request.session.get('verification_code')
+            expires_str = request.session.get('verification_code_expires')
+            registration_data = request.session.get('registration_data')
+            
+            if not all([stored_code, expires_str, registration_data]):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Sessão expirou. Por favor, inicie o cadastro novamente'
+                }, status=400)
+            
+            # Verifica expiração
+            expiration_time = datetime.fromisoformat(expires_str)
+            if datetime.now() > expiration_time:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Código expirou. Por favor, inicie o cadastro novamente'
+                }, status=400)
+            
+            # Verifica código
+            if int(user_code) != stored_code:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Código de verificação inválido'
+                }, status=400)
+            
+            # Cria usuário
+            try:
+                user = Usuario.objects.create_user(
+                    email=registration_data['email'],
+                    password=registration_data['password'],
+                    nome=registration_data['nome'],
+                    telefone=registration_data['telefone'],
+                )
+                login(request, user)
+                
+                # Limpa sessão
+                del request.session['verification_code']
+                del request.session['verification_code_expires']
+                del request.session['registration_data']
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Cadastro realizado com sucesso!',
+                    'usuario': {
+                        'nome': user.nome,
+                        'email': user.email
+                    }
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Erro ao criar conta: {str(e)}'
+                }, status=500)
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
     
     

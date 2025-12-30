@@ -1,0 +1,145 @@
+/* ====================================
+   Caliandra - Estilos Globais Vue.js
+   Baseado nos templates Django originais
+   ==================================== */
+
+/* CSS Variables - cores do projeto */
+:root, [data-bs-theme=light] {
+  /* Cores primárias do Caliandra */
+  --caliandra-primary: #fefef4ff;
+  --caliandra-secondary: #f0d9d1;
+  --caliandra-success: #fc9685;
+  --caliandra-info: #Dac0a7;
+  --caliandra-warning: #caaa93;
+  --caliandra-orange: #fbaa70;
+  --caliandra-light-orange: #ff9f40;
+  --caliandra-bg: #fffedf;
+  --caliandra-white-bg: #f4fefc;
+  
+  /* Bootstrap overrides */
+  --bs-primary: #fefef4ff;
+  --bs-secondary: #f0d9d1;
+  --bs-success: #fc9685;
+  --bs-info: #Dac0a7;
+  --bs-warning: #caaa93;
+  --bs-danger: #fffdf5;
+  --bs-body-color: #212929;
+  --bs-link-color: #000000;
+  --bs-link-hover-color: #ca0aab;
+}
+
+/* Reset e base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Alexandria', sans-serif;
+  background-color: var(--caliandra-bg);
+  color: var(--bs-body-color);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Amethysta', serif;
+}
+
+/* Links */
+a {
+  color: var(--bs-link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--bs-link-hover-color);
+  text-decoration: underline;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Buttons - Style matching Django templates */
+.btn {
+  font-family: 'Alexandria', sans-serif;
+  font-weight: 600;
+  border-radius: 25px;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--caliandra-success);
+  color: black;
+  border-color: var(--caliandra-success);
+}
+
+.btn-primary:hover {
+  background: #ff9f40;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(252, 150, 133, 0.3);
+}
+
+.btn-success {
+  background: var(--caliandra-success);
+  color: black;
+  border-color: var(--caliandra-success);
+}
+
+.btn-success:hover {
+  background: #ff9f40;
+}
+
+/* Gradients - matching Django templates */
+.gradient-orange {
+  background: linear-gradient(135deg, #fbaa70 0%, #ff9f40 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(var(--caliandra-secondary), #e7c1bb);
+}
+
+.gradient-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* Utility classes */
+.shadow-caliandra {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-caliandra-hover:hover {
+  box-shadow: 0 6px 20px rgba(251, 170, 112, 0.4);
+}
+
+.rounded-caliandra {
+  border-radius: 15px;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid var(--caliandra-orange);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+}
