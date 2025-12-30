@@ -68,7 +68,7 @@ class LoginView(View):
                     messages.error(request, f'Não foi possível enviar o e-mail de verificação. Erro: {e}')
                     return render(request, 'registro.html', {'form': form})
 
-                return redirect('verifica_codigo')
+                return redirect('verificacao')
             else:
                  return render(request, 'registro.html', {'form': form})
 
@@ -99,7 +99,7 @@ class VerifyCodeView(View):
     """
     def get(self, request):
         form = VerificationCodeForm()
-        return render(request, 'verifica_codigo.html', {'form': form})
+        return render(request, 'verificacao.html', {'form': form})
 
     def post(self, request):
         form = VerificationCodeForm(request.POST)
@@ -130,7 +130,7 @@ class VerifyCodeView(View):
                         password=registration_data['password'],
                         nome=registration_data['nome'],
                         telefone=registration_data['telefone'],
-                        endereco=registration_data['endereco']
+                       
                     )
                     login(request, user)
                     
@@ -146,9 +146,9 @@ class VerifyCodeView(View):
                     return redirect('login' + '?action=registrar')
             else:
                 messages.error(request, 'Código de verificação inválido.')
-                return render(request, 'verifica_codigo.html', {'form': form})
+                return render(request, 'verificacao.html', {'form': form})
         else:
-            return render(request, 'verifica_codigo.html', {'form': form})
+            return render(request, 'verificacao.html', {'form': form})
 
 class LogoutView(View):
     def get(self, request):
@@ -463,3 +463,36 @@ class EsvaziarCarrinhoView(LoginRequiredMixin, View):
                 'success': False, 
                 'error': 'Erro interno do servidor'
             }, status=500)
+            
+class PerfilView(LoginRequiredMixin, View):
+    
+    login_url = '/login/'
+
+    def get(self, request):
+        return render(request, 'perfil.html', {'usuario': request.user})
+
+    def post(self, request):
+        usuario = request.user
+        nome = request.POST.get('nome')
+        telefone = request.POST.get('telefone')
+        endereco = request.POST.get('endereco')
+
+        # Atualiza os campos do usuário
+        usuario.nome = nome
+        usuario.telefone = telefone
+        usuario.endereco = endereco
+        usuario.save()
+
+        messages.success(request, 'Perfil atualizado com sucesso!')
+        return redirect('perfil') 
+    
+class BlogView(View):
+    def get(self, request):
+        return render(request, 'blog.html')  
+
+class RegistroView(View):
+    def get(self, request):
+        form = RegistroForm()
+        return render(request, 'registro.html', {'form': form})
+    
+    

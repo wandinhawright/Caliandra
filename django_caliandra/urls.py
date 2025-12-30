@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from app.views import (
-    FinalizacaoView, InicioView, LoginView, LogoutView, VerifyCodeView, 
+    BlogView, FinalizacaoView, InicioView, LoginView, LogoutView, RegistroView, VerifyCodeView, 
     CatalogoView, AdicionarAoPedidoView, VerPedidoView, FinalizarPedidoView,
     AtualizarQuantidadeView, RemoverItemView, EsvaziarCarrinhoView
 )
@@ -30,13 +30,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', InicioView.as_view(), name='inicio'),
     path('login/', LoginView.as_view(), name='login'),
+    path('registro/', RegistroView.as_view(), name='registro'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('verifica-codigo/', VerifyCodeView.as_view(), name='verifica_codigo'),
+    path('verificacao/', VerifyCodeView.as_view(), name='verificacao'),
     path('catalogo/', CatalogoView.as_view(), name='catalogo'),
     path('adicionar-ao-pedido/<int:produto_id>/', AdicionarAoPedidoView.as_view(), name='adicionar_ao_pedido'),
     path('ver-pedido/', VerPedidoView.as_view(), name='ver_pedido'),
     path('finalizar-pedido/', FinalizarPedidoView.as_view(), name='finalizar_pedido'),
     path('finalizacao/', FinalizacaoView.as_view(), name='finalizacao'),
+    path('blog/', BlogView.as_view(), name='blog'),  
     # AJAX endpoints for cart management
     path('ajax/atualizar-quantidade/', AtualizarQuantidadeView.as_view(), name='atualizar_quantidade'),
     path('ajax/remover-item/', RemoverItemView.as_view(), name='remover_item'),

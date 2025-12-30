@@ -1,5 +1,5 @@
 :root, [data-bs-theme=light] {
-  --bs-primary: #fefef4ff;
+  --bs-primary: #f8f6e5ff;
   --bs-primary-rgb: 244,254,252;
   --bs-primary-text-emphasis: #626665;
   --bs-primary-bg-subtle: #FDFFFE;
@@ -484,3 +484,4 @@ a:hover {
     padding-bottom: 3rem!important;
   }
 }
+

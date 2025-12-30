@@ -23,7 +23,6 @@ class Usuario(AbstractUser):
     nome = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     telefone = models.CharField(max_length=15)
-    endereco = models.CharField(max_length=255)
     
     username = None  # Remove o campo username completamente
     
