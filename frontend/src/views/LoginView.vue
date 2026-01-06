@@ -3,9 +3,9 @@
   <div class="login-container">
     <div class="container">
       <div class="row d-flex justify-content-center">
-        <div class="col-md-6 col-xl-4">
+        <div class="col-md-10 col-xl-5">
           <div class="card mb-5" style="background: rgba(255,255,255,0); border-color: var(--bs-primary);">
-            <div class="card-body d-flex w-75 flex-column align-items-center ms-7 ps-0 pe-0 mt-10 pt-0 pb-0" 
+            <div class="card-body d-flex w-100 flex-column align-items-center ms-7 ps-0 pe-0 mt-10 pt-0 pb-0" 
                  style="background: var(--bs-secondary); border-radius: 57px;">
               
               <h2 class="mt-5" style="font-family: Amethysta, serif; color: rgb(0,0,0);">
@@ -15,8 +15,8 @@
                 Faça login para poder fazer pedidos!
               </p>
               
-              <div class="bg-success my-4 bs-icon-xl bs-icon-circle bs-icon-primary bs-icon" 
-                   style="background: var(--bs-warning); border-color: var(--bs-success); color: var(--bs-primary);">
+              <div class=" my-4 bs-icon-xl bs-icon-circle bs-icon-primary bs-icon" 
+                   style="background: #fc9685; border-color: var(--bs-success); color: var(--bs-primary);">
                 <svg class="bi bi-person" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" 
                      fill="currentColor" viewBox="0 0 16 16">
                   <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664z"></path>
@@ -52,7 +52,7 @@
                 
                 <div class="mb-3">
                   <button 
-                    class="btn btn-primary bg-success w-50" 
+                    class="btn btn-primary #fc9685 w-50" 
                     type="submit" 
                     style="border-color: var(--bs-success); border-radius: 36px;"
                     :disabled="loading"
@@ -67,6 +67,7 @@
                   Ainda não possui um Login?&nbsp;
                   <router-link to="/registro">Registre-se Aqui!</router-link>
                 </p>
+                
               </form>
             </div>
           </div>
