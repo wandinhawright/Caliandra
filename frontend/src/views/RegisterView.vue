@@ -1,6 +1,6 @@
 <template>
   <!-- Registro Page -->
-  <div class="register-container">
+  <div class="register-container"style="background: #fffdf5;">
     <div class="container">
       <div class="row mb-5">
         <div class="col-md-8 col-xl-6 text-center ps-md-7 pe-md-7 mt-md-7 mx-auto">
@@ -16,9 +16,9 @@
       <div class="row d-flex justify-content-center">
         <div class="col-md-6 col-xl-4">
           <div class="card mb-5">
-            <div class="card-body d-flex flex-column align-items-center" style="background: #f4dbaa;">
+            <div class="card-body d-flex flex-column align-items-center" style="background: #f0d9d1;">
               
-              <div class="bs-icon-xl bs-icon-circle bs-icon-primary bg-success my-4 bs-icon">
+              <div class="bs-icon-xl bs-icon-circle bs-icon-primary  my-4 bs-icon"style="background: #fc9685;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" 
                      viewBox="0 0 16 16" class="bi bi-person">
                   <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664z"></path>
@@ -86,7 +86,7 @@
                 
                 <div class="mb-3">
                   <button 
-                    class="btn btn-primary bg-success w-100 d-block" 
+                    class="btn btn-primary  w-100 d-block"style="background: #fc9685;" 
                     type="submit"
                     :disabled="loading"
                   >
