@@ -23,7 +23,7 @@ const hideHeader = computed(() => {
 <style>
 #app {
   min-height: 100vh;
-  background: #fffedf;
+  background: #F4EFEC;
 }
 
 main {
