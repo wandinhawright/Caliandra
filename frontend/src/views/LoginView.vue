@@ -52,9 +52,9 @@
                 
                 <div class="mb-3">
                   <button 
-                    class="btn btn-primary #fc9685 w-50" 
+                    class="btn btn-primary w-50"  
                     type="submit" 
-                    style="border-color: var(--bs-success); border-radius: 36px;"
+                    style="background: #fc9685; border-color: var(--bs-success); border-radius: 36px;"
                     :disabled="loading"
                   >
                     <span style="font-size: 20px; font-family: Amethysta, serif;">

@@ -1,11 +1,37 @@
 <template>
   <!-- Blog/About Page -->
-  <div class="blog-container" style="background: var(--bs-primary);">
+  <div style="background: #fcd0b7">
+    <div 
+      class="bg-light border rounded border-light pt-5 pb-5 hero-travel jumbotron px-4" 
+      data-aos="fade-up" 
+      data-aos-once="true"
+      style="background: url('/hero-bg.avif');"
+    >
+      <h1 class="hero-title" style="font-family: Alexandria, sans-serif;">
+        Bem-Vindo(a) à Caliandra!
+      </h1>
+      <p class="hero-subtitle" style="color: rgb(0,0,0);font-family: Alexandria, sans-serif;">
+        Aqui você pode participar de compras coletivas de produtos naturais de qualidade por preços acessíveis!
+      </p>
+      <p>
+        <router-link 
+          to="/catalogo"
+          class="btn btn-primary btn-lg  rounded-1 border-success hero-button" 
+          type="button"
+        >
+          <small style="font-family:Alexandria, sans-serif;font-size:19px;color:black;">
+            Saiba Mais
+          </small>
+        </router-link>
+      </p>
+    </div>
+  </div>
+  <div class="blog-container" style="background:#F4EFEC;">
     <div class="container py-4">
       <section>
-        <div class="container py-4 py-xl-5">
+        <div class="container py-6 py-xl-6">
           <div class="row">
-            <div class="col-md-8 col-xl-6 ps-4 pe-4 pt-0 pb-4 mx-auto" style="background: var(--bs-secondary);">
+            <div class="col-md-8 col-xl-0 ps-4 pe-4 pt-0 pb-4 mx-auto" style="background: var(--bs-secondary);">
               
               <!-- Quem Somos -->
               <hr class="my-5">
@@ -115,5 +141,46 @@
 .bs-icon svg {
   width: 3rem;
   height: 3rem;
+}
+.hero-travel {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-size: cover !important;
+  background-position: center !important;
+  border-radius: 15px;
+  margin: 2rem auto;
+  max-width: 1200px;
+}
+
+.hero-title {
+  font-size: 3rem;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 800px;
+}
+
+.hero-button {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
 }
 </style>

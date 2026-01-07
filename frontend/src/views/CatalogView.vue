@@ -131,7 +131,7 @@ onMounted(() => {
 
 <style scoped>
 .catalog-container {
-  background: #fffedf;
+  background: #F4EFEC;
   min-height: 80vh;
   padding: 2rem 0;
 }
