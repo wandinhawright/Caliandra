@@ -3,7 +3,7 @@
   <div class="bg-success mt-0 pt-0 mb-0 pb-0">
     <header class="bg-primary bg-opacity-75 w-100 h-100" data-bs-theme="light">
       <div>
-        <nav class="navbar navbar-expand-md bg-secondary ms-0 ps-0 pt-0 mb-0 pb-0" style="background: linear-gradient(var(--bs-secondary), #e7c1bb);">
+        <nav class="navbar navbar-expand-md bg-secondary ms-0 ps-0 pt-0 mb-0 pb-0" style="background: linear-gradient(#e7c1bb 0%, #F0D9D1 60%, #F4EFEC 99%)">
           <div class="container-fluid">
             <!-- Logo -->
             <router-link class="navbar-brand d-flex align-items-center" to="/">
@@ -33,25 +33,17 @@
             <!-- Navigation Menu -->
             <div class="collapse navbar-collapse ps-0 me-0 pe-0 mt-0 pt-0 pb-0" id="navcol-3">
               <ul class="navbar-nav mx-auto" style="font-size:20px;font-family:Amethysta, serif;">
-                <li class="nav-item ms-0 me-4">
-                  <router-link 
-                    class="nav-link active" 
-                    to="/" 
-                    style="height:46px;color:var(--bs-black);margin:0px;"
-                  >
-                    Início
-                  </router-link>
-                </li>
-                <li class="nav-item">
+                <li class="nav-item ms-0 me-3">
+                  
                   <router-link 
                     class="nav-link me-3" 
                     to="/blog" 
                     style="color:var(--bs-black);"
                   >
-                    Blog
+                    Início
                   </router-link>
                 </li>
-                <li class="nav-item me-5 me-md-0 pe-md-0">
+                <li class="nav-item me-5 me-md-4 pe-md-0">
                   <router-link 
                     class="nav-link me-6 me-md-1" 
                     to="/catalogo" 
@@ -60,7 +52,7 @@
                     Catálogo
                   </router-link>
                 </li>
-                <li class="nav-item me-5 me-md-0 pe-md-0">
+                <li class="nav-item me-5 md-0">
                   <a 
                     class="nav-link me-6 me-md-0" 
                     href="/contatos" 
@@ -71,7 +63,7 @@
                 </li>
                 
                 <!-- User section -->
-                <li class="nav-item ms-0" v-if="!isAuthenticated">
+                <li class="nav-item ms-5" v-if="!isAuthenticated">
                   <a 
                     class="btn btn-success rounded-pill border-2 ms-md-0 me-0" 
                     role="button" 
